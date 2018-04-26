@@ -1126,6 +1126,32 @@ firstprivate(ls_attenuation, fac, f_local, aux, qt_cache, qref_cache, iso_cache,
                                            l_l.NLTEUpperIndex(),
                                            t_nlte_i);
 
+                        // Write out linestrength debug output for Theresa
+#pragma omp critical (linestrength_debug)
+                        {
+                            std::string fname("linestrength_debug.log");
+                            bool log_exists = file_exists(fname);
+                            try
+                            {
+                                std::ofstream of(fname, std::ios::app);
+                                if (!log_exists)
+                                {
+                                    of << "frequency; catalogue intensity; partition ratio; Boltzmann factor; species"
+                                       << std::endl;
+                                }
+                                of << l_l.F() << "; " << l_l.I0()
+                                   << "; " << partition_ratio << "; " << K1 * K2 << "; "<< l_l.Name() << std::endl;
+                            }
+                            catch (exception e)
+                            {
+                                ostringstream os;
+                                os << "Cannot open debug file: " << fname << '\n'
+                                   << "Maybe you don't have write access "
+                                   << "to the directory or the file?";
+                                throw runtime_error(os.str());
+                            }
+                        }
+
                         // Dopple broadening
                         const Numeric sigma = l_l.F() * doppler_const *sqrt( t_i / l_l.IsotopologueData().Mass());
                         
