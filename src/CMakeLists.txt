@@ -306,6 +306,11 @@ if (FFTW_FOUND)
   target_link_libraries (artscore ${FFTW_LIBRARIES})
 endif()
 
+if (SHTNS_FOUND)
+  include_directories (${SHTNS_INCLUDE_DIR})
+  target_link_libraries (artscore ${SHTNS_LIBRARIES})
+endif()
+
 if (NETCDF_FOUND)
   target_link_libraries (artscore ${NETCDF_LIBRARIES})
 endif (NETCDF_FOUND)

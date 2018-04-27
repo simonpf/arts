@@ -51,6 +51,9 @@
 /* Define to compile with FFTW support */
 #cmakedefine ENABLE_FFTW ${FFTW_FOUND}
 
+/* Define to compile with SHTns support */
+#cmakedefine ENABLE_SHTNS ${SHTNS_FOUND}
+
 /* Define to compile with legacy HITRAN 2008 support */
 #cmakedefine USE_HITRAN2008
 

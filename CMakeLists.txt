@@ -248,6 +248,11 @@ if (NOT NO_OPENMP AND NOT CMAKE_GENERATOR STREQUAL "Xcode")
   include (FindOpenMP)
 endif (NOT NO_OPENMP AND NOT CMAKE_GENERATOR STREQUAL "Xcode")
 
+########## SHTns support #########
+if (NOT NO_SHTNS)
+  include (FindSHTns)
+endif()
+
 ########### Docserver support ##########
 
 if (NOT NO_DOCSERVER)
@@ -459,6 +464,12 @@ if (OEM_SUPPORT)
   message (STATUS "OEM enabled")
 else()
   message (STATUS "OEM disabled")
+endif()
+
+if (SHTNS_FOUND)
+  message (STATUS "SHTns enabled")
+else()
+  message (STATUS "SHTns disabled")
 endif()
 
 if (C_API)
