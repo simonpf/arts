@@ -226,7 +226,6 @@ void inv( MatrixView Ainv,
     {
         throw runtime_error( "Error inverting matrix: Matrix not of full rank." );
     }
-    
 }
 
 void inv( ComplexMatrixView Ainv,

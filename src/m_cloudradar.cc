@@ -646,7 +646,11 @@ void iyActiveSingleScat(
                                     dtrans_partial_dx_above(ip,iq,iv,joker,joker),
                                     iy(iout,joker) );
                               Matrix tr_inv(ns,ns);
-                              inv( tr_inv, trans_partial(ip,iv,joker,joker) );
+                              try {
+                                  inv( tr_inv, trans_partial(ip,iv,joker,joker) );
+                              } catch(...) {
+                                  tr_inv = 0.0;
+                              }
                               Vector jnew(ns);
                               mult( jnew, tr_inv, jterm );
                               jnew *= 2;
@@ -659,7 +663,11 @@ void iyActiveSingleScat(
                                     dtrans_partial_dx_below(ip,iq,iv,joker,joker),
                                     iy(iout,joker) );
                               Matrix tr_inv(ns,ns);
-                              inv( tr_inv, trans_partial(ip+1,iv,joker,joker) );
+                              try {
+                                  inv( tr_inv, trans_partial(ip+1,iv,joker,joker) );
+                              } catch(...) {
+                                  tr_inv = 0.0;
+                              }
                               Vector jnew(ns);
                               mult( jnew, tr_inv, jterm );
                               jnew *= 2;
