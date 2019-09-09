@@ -651,6 +651,11 @@ void psdD14(Matrix& psd_data,
   const bool dm_depend = (Index)dm == -999;
   const bool iwc_depend = (Index)iwc == -999;
 
+  if ((!n0_depend) && (!dm_depend) && (!iwc_depend)) {
+      throw std::runtime_error("At least one of the three inputs should be"
+                               "q set to -999.");
+  }
+
   // Check fixed parameters
   const bool iwc_fixed = !(std::isnan(iwc)) && !iwc_depend;
   const bool n0_fixed = !(std::isnan(n0)) && !n0_depend;
@@ -813,7 +818,7 @@ void psdD14(Matrix& psd_data,
     }
 
     // Ensure that results are zero when IWC is zero.
-    if (iwc_p == 0.0) {
+    if ((!iwc_depend) && (iwc_p == 0.0)) {
       psd_data(0, joker) = 0.0;
       for (size_t i = 0; i < 2; ++i) {
         if (do_jac[i]) {
