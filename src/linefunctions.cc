@@ -32,6 +32,7 @@
  * apply_linestrength_scaling(...)
  */
 
+#include <functional>
 #include "linefunctions.h"
 #include <Eigen/Core>
 #include <Faddeeva/Faddeeva.hh>
@@ -334,7 +335,7 @@ void Linefunctions::set_voigt(
   z.noalias() = invGD * (Complex(-F0, lso.G0) + f_grid.array()).matrix();
 
   // Line shape
-  F.noalias() = fac * z.unaryExpr(&w);
+  F.noalias() = fac * z.unaryExpr(std::ref(w));
 
   if (nppd) {
     dw.noalias() = 2 * (Complex(0, fac * Constant::inv_sqrt_pi) -
@@ -1270,7 +1271,7 @@ void Linefunctions::set_htp(Eigen::Ref<Eigen::VectorXcd> F,
   }
 
   // Convert back to ARTS
-  F = F.unaryExpr(&pCqSDHC_to_arts);
+  F = F.unaryExpr(std::ref(pCqSDHC_to_arts));
   for (auto iq = 0; iq < derivatives_data_position.nelem(); iq++) {
     const RetrievalQuantity& rt =
         derivatives_data[derivatives_data_position[iq]];
@@ -1278,13 +1279,13 @@ void Linefunctions::set_htp(Eigen::Ref<Eigen::VectorXcd> F,
     if (rt == Jacobian::Line::Center or is_frequency_parameter(rt) or
         is_pressure_broadening_G0(rt) or is_pressure_broadening_D0(rt) or
         is_pressure_broadening_FVC(rt))
-      dF.col(iq) = dF.col(iq).unaryExpr(&pCqSDHC_to_arts_freq_deriv);
+      dF.col(iq) = dF.col(iq).unaryExpr(std::ref(pCqSDHC_to_arts_freq_deriv));
     else if (is_pressure_broadening_G2(rt))
-      dF.col(iq) = dF.col(iq).unaryExpr(&pCqSDHC_to_arts_G2_deriv);
+      dF.col(iq) = dF.col(iq).unaryExpr(std::ref(pCqSDHC_to_arts_G2_deriv));
     else if (is_pressure_broadening_D2(rt))
-      dF.col(iq) = dF.col(iq).unaryExpr(&pCqSDHC_to_arts_D2_deriv);
+      dF.col(iq) = dF.col(iq).unaryExpr(std::ref(pCqSDHC_to_arts_D2_deriv));
     else
-      dF.col(iq) = dF.col(iq).unaryExpr(&pCqSDHC_to_arts);
+      dF.col(iq) = dF.col(iq).unaryExpr(std::ref(pCqSDHC_to_arts));
   }
 }
 
