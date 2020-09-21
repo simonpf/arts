@@ -604,6 +604,8 @@ int main() {
         << "#include \"gridded_fields.h\"\n"
         << "#include \"linemixing_hitran.h\"\n"
         << "#include \"optproperties.h\"\n"
+        << "#include \"scattering_habit.h\"\n"
+        << "#include \"scattering_species.h\"\n"
         << "#include \"jacobian.h\"\n"
         << "#include \"mc_antenna.h\"\n"
         << "#include \"m_general.h\"\n"

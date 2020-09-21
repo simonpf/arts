@@ -1568,6 +1568,63 @@ void xml_write_to_stream(ostream& os_xml,
   os_xml << '\n';
 }
 
+//=== ScatteringSpecies ======================================
+
+//! Reads SingleScatteringData from XML input stream
+/*!
+  \param is_xml  XML Input stream
+  \param ssdata  SingleScatteringData return value
+  \param pbifs   Pointer to binary input stream. NULL in case of ASCII file.
+*/
+void xml_read_from_stream(istream& is_xml,
+                          ScatteringSpecies& ssdata,
+                          bifstream* pbifs,
+                          const Verbosity& verbosity) {
+}
+
+//! Writes SingleScatteringData to XML output stream
+/*!
+  \param os_xml  XML Output stream
+  \param ssdata  SingleScatteringData
+  \param pbofs   Pointer to binary file stream. NULL for ASCII output.
+  \param name    Optional name attribute
+*/
+void xml_write_to_stream(ostream& os_xml,
+                         const ScatteringSpecies& ssdata,
+                         bofstream* pbofs,
+                         const String& name,
+                         const Verbosity& verbosity) {
+}
+
+//=== ScatteringSpecies ======================================
+
+//! Reads SingleScatteringData from XML input stream
+/*!
+  \param is_xml  XML Input stream
+  \param ssdata  SingleScatteringData return value
+  \param pbifs   Pointer to binary input stream. NULL in case of ASCII file.
+*/
+void xml_read_from_stream(istream& is_xml,
+                          ScatteringHabit& ssdata,
+                          bifstream* pbifs,
+                          const Verbosity& verbosity) {
+}
+
+//! Writes SingleScatteringData to XML output stream
+/*!
+  \param os_xml  XML Output stream
+  \param ssdata  SingleScatteringData
+  \param pbofs   Pointer to binary file stream. NULL for ASCII output.
+  \param name    Optional name attribute
+*/
+void xml_write_to_stream(ostream& os_xml,
+                         const ScatteringHabit& ssdata,
+                         bofstream* pbofs,
+                         const String& name,
+                         const Verbosity& verbosity) {
+}
+
+
 //=== ScatteringMetaData ======================================
 
 //! Reads ScatteringMetaData from XML input stream

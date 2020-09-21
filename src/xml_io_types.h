@@ -55,6 +55,8 @@
 #include "optproperties.h"
 #include "ppath.h"
 #include "propagationmatrix.h"
+#include "scattering_habit.h"
+#include "scattering_species.h"
 #include "telsem.h"
 #include "tessem.h"
 #include "transmissionmatrix.h"
@@ -117,6 +119,8 @@ TMPL_XML_READ_WRITE_STREAM(RetrievalQuantity)
 TMPL_XML_READ_WRITE_STREAM(ScatteringMetaData)
 TMPL_XML_READ_WRITE_STREAM(SLIData2)
 TMPL_XML_READ_WRITE_STREAM(SingleScatteringData)
+TMPL_XML_READ_WRITE_STREAM(ScatteringSpecies)
+TMPL_XML_READ_WRITE_STREAM(ScatteringHabit)
 TMPL_XML_READ_WRITE_STREAM(SpeciesAuxData)
 TMPL_XML_READ_WRITE_STREAM(SpeciesRecord)
 TMPL_XML_READ_WRITE_STREAM(SpeciesTag)
@@ -140,6 +144,7 @@ TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfGridPos)
 TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfArrayOfGridPos)
 TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfIndex)
 TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfMatrix)
+TMPL_XML_READ_WRITE_STREAM(ArrayOfScatteringSpecies)
 TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfScatteringMetaData)
 TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfSingleScatteringData)
 TMPL_XML_READ_WRITE_STREAM(ArrayOfArrayOfSpeciesTag)

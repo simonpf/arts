@@ -1,8 +1,10 @@
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR}
                       ${CMAKE_CURRENT_SOURCE_DIR}
                       ${ZLIB_INCLUDE_DIR}
-                      ${ARTS_SOURCE_DIR}/3rdparty/invlib/src
-                      ${ARTS_SOURCE_DIR}/3rdparty/cdisort
+                      ${CMAKE_SOURCE_DIR}/3rdparty/invlib/src
+                      ${CMAKE_SOURCE_DIR}/3rdparty/Eigen_unsupported
+                      ${CMAKE_SOURCE_DIR}/3rdparty/cdisort
+                      ${scatlib_INCLUDE_DIR}
                     )
 
 if (NETCDF_FOUND)
@@ -25,6 +27,7 @@ set (ALL_ARTS_LIBRARIES
   methods
   matpack
   cdisort
+  scattering
   )
 
 file (GLOB HEADERFILES "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -118,6 +121,7 @@ add_custom_target (BuildAutoSources DEPENDS auto_md.h
 add_executable (make_auto_md_h
         agenda_record.cc
         arts.cc
+        auto_workspace.h
         file.cc
         make_auto_md_h.cc
         messages.cc
@@ -126,7 +130,7 @@ add_executable (make_auto_md_h
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_h methods matpack)
+target_link_libraries (make_auto_md_h methods matpack scattering)
 
 add_custom_command (
         OUTPUT auto_md.h
@@ -147,7 +151,7 @@ add_executable (make_auto_md_cc
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_cc methods matpack)
+target_link_libraries (make_auto_md_cc methods matpack scattering)
 
 add_custom_command (
         OUTPUT auto_md.cc
@@ -210,6 +214,7 @@ add_library (artscore STATIC
   m_absorptionlines.cc
   m_abs_lookup.cc
   m_agenda.cc
+  m_append.cc
   m_array.cc
   m_artstime.cc
   m_atmosphere.cc
@@ -247,6 +252,7 @@ add_library (artscore STATIC
   m_rte.cc
   m_retrieval.cc
   m_sensor.cc
+  m_select.cc
   m_surface.cc
   m_telsem.cc
   m_tessem.cc
@@ -318,6 +324,7 @@ if (ENABLE_GUI)
 endif()
 
 target_link_libraries (artscore ${ZLIB_LIBRARIES} wigner)
+target_link_libraries (artscore scattering)
 
 if (FFTW_FOUND)
   include_directories (${FFTW_INCLUDE_DIR})
@@ -371,6 +378,13 @@ add_library (test_utils STATIC
         test_utils.cc
         )
 target_link_libraries( test_utils matpack )
+
+########### scatlib ###############
+
+add_library(scattering STATIC
+  scattering_habit.cxx
+  scattering_species.cxx)
+target_link_libraries(scattering ${scatlib_LIBRARIES} fftw3)
 
 ########### testcases ###############
 

@@ -117,6 +117,7 @@ void define_wsv_group_names() {
   wsv_group_names.push_back("ArrayOfQuantumIdentifier");
   wsv_group_names.push_back("ArrayOfRadiationVector");
   wsv_group_names.push_back("ArrayOfRetrievalQuantity");
+  wsv_group_names.push_back("ArrayOfScatteringSpecies");
   wsv_group_names.push_back("ArrayOfScatteringMetaData");
   wsv_group_names.push_back("ArrayOfSingleScatteringData");
   wsv_group_names.push_back("ArrayOfSparse");
@@ -155,6 +156,8 @@ void define_wsv_group_names() {
   wsv_group_names.push_back("RadiationVector");
   wsv_group_names.push_back("Rational");
   wsv_group_names.push_back("ScatteringMetaData");
+  wsv_group_names.push_back("ScatteringHabit");
+  wsv_group_names.push_back("ScatteringSpecies");
   wsv_group_names.push_back("SingleScatteringData");
   wsv_group_names.push_back("Sparse");
   wsv_group_names.push_back("SpeciesAuxData");

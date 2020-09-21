@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2012 Stefan Buehler <sbuehler@ltu.se>
+/* Copyright (C) 2020 Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -16,107 +16,24 @@
    USA. */
 
 /*!
-  \file   m_append.h
-  \author Stefan Buehler <sbuehler@ltu.se>, Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
-  \date   Fri Jun 14 17:09:05 2002
+  \file   m_append.cc
+  \author Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
+  \date   2020-09-21
 
   \brief  Implementation of Append.
 
-  This file contains the definition of the generic append functions as well
-  as declaration of specialization for specific types.
+  This file contains the implementation of the supergeneric method
+  Append.
 */
+#include "m_append.h"
 
-#ifndef m_append_h
-#define m_append_h
-
-#include "agenda_class.h"
-#include "array.h"
-#include "exceptions.h"
-#include "matpackI.h"
-#include "matpackIII.h"
-#include "matpackVI.h"
-
-/** Generic append for appending arrays to Array types.
- *
- * @tparam ElementType The type of array elements.
- * @param out Array to append to.
- * @param out_name Not used.
- * @param in The array to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-template <class ElementType>
-void Append(  // WS Generic Output:
-    Array<ElementType>& out,
-    const String& /* out_name */,
-    // WS Generic Input:
-    const Array<ElementType>& in,
-    const String& /*direction*/,
-    const String& /* in_name */,
-    const String& /* direction_name */,
-    const Verbosity& /*verbosity*/) {
-  const Array<ElementType>* in_pnt;
-  Array<ElementType> in_copy;
-
-  if (&in == &out) {
-    in_copy = in;
-    in_pnt = &in_copy;
-  } else
-    in_pnt = &in;
-
-  const Array<ElementType>& in_ref = *in_pnt;
-
-  // Reserve memory in advance to avoid reallocations:
-  out.reserve(out.nelem() + in_ref.nelem());
-  // Append in to end of out:
-  for (Index i = 0; i < in_ref.nelem(); ++i) out.push_back(in_ref[i]);
-}
-
-/** Generic append for appending single elements to Array types.
- *
- * @tparam ElementType The type of array elements.
- * @param out Array to append to.
- * @param out_name Not used.
- * @param in The array to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-template <class ElementType>
-void Append(  // WS Generic Output:
-    Array<ElementType>& out,
-    const String& /* out_name */,
-    // WS Generic Input:
-    const ElementType& in,
-    const String& /*direction*/,
-    const String& /* in_name */,
-    const String& /* direction_name */,
-    const Verbosity&) {
-  // Append in to end of out:
-  out.push_back(in);
-}
-
-/** Append overload for appending single Agenda to array.
- *
- * @param ws ARTS workspace.
- * @param out Array to append to.
- * @param out_name Not used.
- * @param in The single agenda to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Verbosity to use in agenda checks.
- */
-inline void Append(Workspace& ws,
+void Append(Workspace& ws,
             // WS Generic Output:
             ArrayOfAgenda& out,
             const String& out_name,
             // WS Generic Input:
             const Agenda& in,
-            const String& /*direction*/,
+            const String& direction _U_,
             const String& /* in_name */,
             const String& /* direction_name */,
             const Verbosity& verbosity) {
@@ -126,18 +43,7 @@ inline void Append(Workspace& ws,
   out[out.nelem() - 1].check(ws, verbosity);
 }
 
-/** Append overload for appending AgendaArrays.
- *
- * @param ws ARTS workspace.
- * @param out Array to append to.
- * @param out_name Not used.
- * @param in The array to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Verbosity to use in agenda checks.
- */
-inline void Append(Workspace& ws,
+void Append(Workspace& ws,
             // WS Generic Output:
             ArrayOfAgenda& out,
             const String& out_name,
@@ -155,22 +61,12 @@ inline void Append(Workspace& ws,
   }
 }
 
-/** Append overload for appending vectors.
- *
- * @param out Vector to append to.
- * @param out_name Not used.
- * @param in The vector to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Vector& out,
     const String& /* out_name */,
     // WS Generic Input:
     const Vector& in,
-    const String& /*direction*/,
+    const String& direction _U_,
     const String& /* in_name */,
     const String& /* direction_name */,
     const Verbosity&) {
@@ -198,18 +94,7 @@ inline void Append(  // WS Generic Output:
   if (in_ref.nelem()) out[Range(dummy.nelem(), in_ref.nelem())] = in_ref;
 }
 
-/** Append overload for appending matrices.
- *
- * @param out Matrix to append to.
- * @param out_name Not used.
- * @param in The matrix to append.
- * @param direction Whether to append along "leading" dimension, i.e. rows, of "trailing" dimension,
- * i.e. columns.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Matrix& out,
     const String& /* out_name */,
     // WS Generic Input:
@@ -263,19 +148,7 @@ inline void Append(  // WS Generic Output:
         "Dimension must be either \"leading\" or \"trailing\".");
 }
 
-/** Append overload for appending vectors to matrices.
- *
- * @param out Matrix to append to.
- * @param out_name Not used.
- * @param in The vector to append.
- * @param direction Whether to append along "leading" dimension, i.e. rows, of "trailing" dimension,
- * i.e. columns.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
 void Append(  // WS Generic Output:
-inline void Append(  // WS Generic Output:
     Matrix& out,
     const String& /* out_name */,
     // WS Generic Input:
@@ -318,22 +191,12 @@ inline void Append(  // WS Generic Output:
         "Dimension must be either \"leading\" or \"trailing\".");
 }
 
-/** Append overload for appending floats to vector.
- *
- * @param out Vector to append to.
- * @param out_name Not used.
- * @param in The vector to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Vector& out,
     const String& /* out_name */,
     // WS Generic Input:
     const Numeric& in,
-    const String& /*direction*/,
+    const String& direction _U_,
     const String& /* in_name */,
     const String& /* direction_name */,
     const Verbosity&) {
@@ -350,27 +213,13 @@ inline void Append(  // WS Generic Output:
   out[Range(dummy.nelem(), 1)] = in;
 }
 
-inline void Append(  // WS Generic Output:
-
-/** Append overload for appending matrices to Tensor3.
- *
- * Appends matrix along the pages dimension of the tensor.
- *
- * @param out The Tensor3 to append to.
- * @param out_name Not used.
- * @param in The matrix to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Tensor3& out,
     const String& /* out_name */,
     // WS Generic Input:
     const Matrix& in,
     //            const String& direction,
-    const String& /* direction */,
+    const String& direction _U_,
     const String& /* in_name */,
     const String& /* direction_name */,
     const Verbosity&) {
@@ -394,25 +243,13 @@ inline void Append(  // WS Generic Output:
   }
 }
 
-/** Append overload for appending Tensor3 to Tensor3.
- *
- * Appends along the pages dimension of the tensor.
- *
- * @param out The Tensor3 to append to.
- * @param out_name Not used.
- * @param in The matrix to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Tensor3& out,
     const String& /* out_name */,
     // WS Generic Input:
     const Tensor3& in,
     //            const String& direction,
-    const String& /*direction*/,
+    const String& direction _U_,
     const String& /* in_name */,
     const String& /* direction_name */,
     const Verbosity&) {
@@ -448,19 +285,7 @@ inline void Append(  // WS Generic Output:
         Range(0, in_ref.ncols())) = in_ref;
 }
 
-/** Append overload for appending Tensor3 to Tensor4.
- *
- * Appends along the books dimension of the tensor.
- *
- * @param out The Tensor4 to append to.
- * @param out_name Not used.
- * @param in The Tensor3 to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Tensor4& out,
     const String& /* out_name */,
     // WS Generic Input:
@@ -496,19 +321,7 @@ inline void Append(  // WS Generic Output:
   }
 }
 
-/** Append overload for appending Tensor4 to Tensor4.
- *
- * Appends along the books dimension of the tensor.
- *
- * @param out The Tensor4 to append to.
- * @param out_name Not used.
- * @param in The Tensor4 to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     Tensor4& out,
     const String& /* out_name */,
     // WS Generic Input:
@@ -557,24 +370,19 @@ inline void Append(  // WS Generic Output:
         Range(0, in_ref.ncols())) = in_ref;
 }
 
-/** Append overload for appending strings
- *
- * @param out The String to append to.
- * @param out_name Not used.
- * @param in The String to append.
- * @param direction Not used.
- * @param in_name Not used.
- * @param direction_name Not used.
- * @param Verbosity Not used.
- */
-    inline void Append(  // WS Generic Output:
+void Append(  // WS Generic Output:
     String& out,
     const String& /* out_name */,
     // WS Generic Input:
     const String& in,
-    const String& /*direction*/,
+    const String& direction _U_,
     const String& /* in_name */,
     const String& /* direction_name */,
-    const Verbosity& /*verbosity*/);
+    const Verbosity&) {
+  // String stream for easy string operations:
+  ostringstream os;
 
-#endif  // m_append_h
+  os << out << in;
+
+  out = os.str();
+}
