@@ -5542,7 +5542,7 @@ void define_md_data_raw() {
           "Note that this keyword solely affects the phase function;\n"
           "extinction/absorption/scattering cross sections are always\n"
           "interpolated to the actual temperature.\n"),
-      AUTHORS("Claudia Emde, Jana Mendrok"),
+      AUTHORS("Claudia Emde, Jana Mendrok, Simon Pfreundschuh"),
       OUT("cloudbox_field"),
       GOUT(),
       GOUT_TYPE(),
@@ -5556,11 +5556,14 @@ void define_md_data_raw() {
          "propmat_clearsky_agenda",
          "atmosphere_dim",
          "pnd_field",
+         "particle_bulkprop_field",
+         "particle_bulkprop_names",
          "t_field",
          "z_field",
          "vmr_field",
          "p_grid",
          "scat_data",
+         "scattering_species",
          "f_grid",
          "za_grid",
          "stokes_dim",
@@ -5598,11 +5601,14 @@ void define_md_data_raw() {
          "surface_rtprop_agenda",
          "atmosphere_dim",
          "pnd_field",
+         "particle_bulkprop_field",
+         "particle_bulkprop_names",
          "t_field",
          "z_field",
          "vmr_field",
          "p_grid",
          "scat_data",
+         "scattering_species",
          "f_grid",
          "za_grid",
          "stokes_dim"),
@@ -16588,6 +16594,62 @@ void define_md_data_raw() {
                "A flag to deactivate calculation of a and b, to possibly "
                "save some time. The a and b parameters are then set to -1."
                "Default is to calculate a and b.")));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_habitGetParticleSizes"),
+      DESCRIPTION(
+          "Extract particle size information from particle habit."
+          "\n"
+          "A scattering habit is defined by a size-resolved scattering data\n"
+          "model and a corresponding PSD agenda. From this, bulk scattering\n"
+          " properties are calculated by evaluating the PSD at each\n"
+          " atmospheric grid position and summing the scattering data for\n"
+          " each given particle size.\n"),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT("scat_species_x", "scat_species_a", "scat_species_b"),
+      GOUT(),
+      GOUT_TYPE(),
+      GOUT_DESC(),
+      IN("scattering_habit"),
+      GIN("x_unit", "x_fit_start", "x_fit_end", "do_only_x"),
+      GIN_TYPE("String", "Numeric", "Numeric", "Index"),
+      GIN_DEFAULT(NODEF, "0", "1e9", "0"),
+      GIN_DESC("Unit for size grid, allowed options listed above.",
+               "Smallest size to consider in fit to determine a and b.",
+               "Largest size to consider in fit to determine a and b.",
+               "A flag to deactivate calculation of a and b, to possibly "
+               "save some time. The a and b parameters are then set to -1."
+               "Default is to calculate a and b.")));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesAddScatteringHabit"),
+      DESCRIPTION(
+          "Add scattering habit to scattering_species."
+          "\n"
+          "A scattering habit is defined by a size-resolved scattering data\n"
+          "model and a corresponding PSD agenda. From this, bulk scattering\n"
+          " properties are calculated by evaluating the PSD at each\n"
+          " atmospheric grid position and summing the scattering data for\n"
+          " each given particle size.\n"),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT("scattering_species"),
+      GOUT(),
+      GOUT_TYPE(),
+      GOUT_DESC(),
+      IN(),
+      GIN("name", "scattering_data", "scattering_meta_data", "psd_agenda", "pnd_agenda_input"),
+      GIN_TYPE("String", "ArrayOfSingleScatteringData", "ArrayOfScatteringMetaData", "Agenda", "ArrayOfString"),
+      GIN_DEFAULT(NODEF, NODEF, NODEF, NODEF, NODEF),
+      GIN_DESC("The name of the scattering species.",
+               "Array of scattering data describing the particle scattering\n"
+               " model.",
+               "Array of scattering meta data corresponding to the data in\n"
+               "*scatterig_data*",
+               "PSD agenda to use to determine the particle size distribution\n"
+               "for the scattering habit.",
+               "Names of the bulk properties in *pbp_field* to use as input\n"
+               "for the agenda."
+          )));
 
   md_data_raw.push_back(create_mdrecord(
       NAME("particle_fieldCleanup"),

@@ -2,6 +2,17 @@
 #include "m_append.h"
 #include "m_select.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// ScatteringPropertiesSpec
+////////////////////////////////////////////////////////////////////////////////
+
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(int l_max_, int m_max_)
+    : format(Format::Spectral), l_max(l_max) {}
+
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(Vector lon_scat_, Vector lat_scat_)
+    : format(Format::Gridded), lon_scat(lon_scat_), lat_scat(lat_scat_) {}
+
+
 std::ostream & operator<<(std::ostream &out, const ScatteringSpecies &) {
     out << "My first scattering species. " << std::endl;
 }

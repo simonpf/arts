@@ -145,7 +145,7 @@ const char *InteractiveWorkspace::execute_workspace_method(
 
   TokVal t{};
   Agenda a{};
-  try {
+  //try {
     MRecord mr(id, output, input, t, a);
     if (mr.isInternal()) {
       out3 << "- " + m.Name() + "\n";
@@ -153,10 +153,11 @@ const char *InteractiveWorkspace::execute_workspace_method(
       out1 << "- " + m.Name() + "\n";
     }
     getaways[id](*this, mr);
-  } catch (const std::exception &e) {
-    string_buffer = e.what();
-    return string_buffer.c_str();
-  }
+    //} catch (const std::exception &e) {
+    //  throw e;
+    //  string_buffer = e.what();
+    //  return string_buffer.c_str();
+    //}
   return nullptr;
 }
 

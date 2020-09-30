@@ -31,6 +31,7 @@
 #include "matpackIV.h"
 #include "mystring.h"
 #include "optproperties.h"
+#include "scattering_species.h"
 
 /** check_disort_input. *** FIXMEDOC *** in disort.cc, line 197
  *
@@ -158,7 +159,10 @@ void run_cdisort(Workspace& ws,
                  ConstVectorView t_profile,
                  ConstMatrixView vmr_profiles,
                  ConstMatrixView pnd_profiles,
+                 ConstMatrixView pbf_profiles,
+                 const ArrayOfString & pbf_names,
                  const ArrayOfArrayOfSingleScatteringData& scat_data,
+                 const ArrayOfScatteringSpecies &scattering_species,
                  const Agenda& propmat_clearsky_agenda,
                  const ArrayOfIndex& cloudbox_limits,
                  const Numeric& surface_skin_t,
@@ -358,6 +362,7 @@ void reduced_1datm(Vector& p,
                    Vector& z,
                    Vector& t,
                    Matrix& vmr,
+                   Matrix& pbf,
                    Matrix& pnd,
                    ArrayOfIndex& cboxlims,
                    Index& ncboxremoved,
@@ -367,6 +372,7 @@ void reduced_1datm(Vector& p,
                    ConstVectorView t_profile,
                    ConstMatrixView vmr_profiles,
                    ConstMatrixView pnd_profiles,
+                   ConstMatrixView pbf_profiles,
                    const ArrayOfIndex& cloudbox_limits);
 
 /** Surface albed

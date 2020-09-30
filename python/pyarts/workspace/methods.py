@@ -359,6 +359,10 @@ class WorkspaceMethod:
         for name in self.g_in:
             arg = g_input_args[name]
             if type(arg) == WorkspaceVariable:
+                expected = self.g_in_types[sg_index][name]
+                if not arg.group_id == expected:
+                    raise Exception("Generic input " + name + " expected to be of type "
+                                    + group_names[expected])
                 arts_args_in.append(arg.ws_id)
             else:
                 gid = self.g_in_types[sg_index][name]

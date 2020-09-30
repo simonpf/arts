@@ -3030,6 +3030,19 @@ void Workspace::define_wsv_data() {
       GROUP("ArrayOfAgenda")));
 
   wsv_data.push_back(WsvRecord(
+      NAME("pnd_agenda"),
+      DESCRIPTION(
+          "Mapping of particle bulk properties to number density data.\n"
+          "\n"
+          "The length of this agenda array shall match the size of *scat_species*.\n"
+          "That is there is a \"pnd-agenda\" associated with each scattering species.\n"
+          "\n"
+          "In short, each agenda takes some bulk property data as input, and returns\n"
+          "particle number densities for all scattering elements of the species.\n"
+          "See further *pnd_agenda_input* and associated variables.\n"),
+      GROUP("Agenda")));
+
+  wsv_data.push_back(WsvRecord(
       NAME("pnd_agenda_input"),
       DESCRIPTION(
           "The variable input to one element of *pnd_agenda_array*.\n"
@@ -3887,13 +3900,19 @@ void Workspace::define_wsv_data() {
       GROUP("ArrayOfArrayOfSingleScatteringData")));
 
   wsv_data.push_back(WsvRecord(
-                         NAME("scattering_species"),
-                         DESCRIPTION(
-                             "Array holding the atmosphere's scattering species.\n"
-                             "\n"
-                             "Standard approach to derive scat_data is to use *scat_dataCalc* to\n"
-                             "derive it from *scat_data_raw*."),
-                         GROUP("ArrayOfScatteringSpecies")));
+      NAME("scattering_species"),
+      DESCRIPTION(
+          "Array holding the atmosphere's scattering species.\n"
+          "\n"
+          "Standard approach to derive scat_data is to use *scat_dataCalc* to\n"
+          "derive it from *scat_data_raw*."),
+      GROUP("ArrayOfScatteringSpecies")));
+
+  wsv_data.push_back(WsvRecord(
+      NAME("scattering_habit"),
+      DESCRIPTION(
+          "Scattering habit used in PSD calculations.\n"),
+      GROUP("ScatteringHabit")));
 
   wsv_data.push_back(WsvRecord(
       NAME("scat_data_checked"),

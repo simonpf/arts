@@ -380,7 +380,7 @@ void run_rt4(Workspace& ws,
              const Verbosity& verbosity) {
   // Create an atmosphere starting at z_surface
   Vector p, z, t;
-  Matrix vmr, pnd;
+  Matrix vmr, pnd, pbf;
   ArrayOfIndex cboxlims;
   Index ncboxremoved;
   //
@@ -389,6 +389,7 @@ void run_rt4(Workspace& ws,
                 t,
                 vmr,
                 pnd,
+                pbf,
                 cboxlims,
                 ncboxremoved,
                 p_grid,
@@ -396,6 +397,7 @@ void run_rt4(Workspace& ws,
                 surf_altitude,
                 t_profile,
                 vmr_profiles,
+                pnd_profiles,
                 pnd_profiles,
                 cloudbox_limits);
 

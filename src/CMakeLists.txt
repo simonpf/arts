@@ -27,7 +27,6 @@ set (ALL_ARTS_LIBRARIES
   methods
   matpack
   cdisort
-  scattering
   )
 
 file (GLOB HEADERFILES "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -130,7 +129,7 @@ add_executable (make_auto_md_h
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_h methods matpack scattering)
+target_link_libraries (make_auto_md_h methods matpack ${scatlib_LIBRARIES} fftw3)
 
 add_custom_command (
         OUTPUT auto_md.h
@@ -151,7 +150,7 @@ add_executable (make_auto_md_cc
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_cc methods matpack scattering)
+target_link_libraries (make_auto_md_cc methods matpack ${scatlib_LIBRARIES} fftw3)
 
 add_custom_command (
         OUTPUT auto_md.cc
@@ -251,6 +250,8 @@ add_library (artscore STATIC
   m_rt4.cc
   m_rte.cc
   m_retrieval.cc
+  m_scattering_species.cc
+  m_scattering_habit.cc
   m_sensor.cc
   m_select.cc
   m_surface.cc
@@ -292,6 +293,8 @@ add_library (artscore STATIC
   special_interp.cc
   species_data.cc
   species_info.cc
+  scattering_habit.cc
+  scattering_species.cc
   surface.cc
   telsem.cc
   tessem.cc
@@ -323,8 +326,7 @@ if (ENABLE_GUI)
   target_link_libraries (artscore artsgui)
 endif()
 
-target_link_libraries (artscore ${ZLIB_LIBRARIES} wigner)
-target_link_libraries (artscore scattering)
+target_link_libraries (artscore ${ZLIB_LIBRARIES} wigner scattering)
 
 if (FFTW_FOUND)
   include_directories (${FFTW_INCLUDE_DIR})
@@ -381,10 +383,12 @@ target_link_libraries( test_utils matpack )
 
 ########### scatlib ###############
 
-add_library(scattering STATIC
-  scattering_habit.cxx
-  scattering_species.cxx)
-target_link_libraries(scattering ${scatlib_LIBRARIES} fftw3)
+#add_library(scattering STATIC
+#  scattering_habit.cc
+#  scattering_species.cc
+#  m_scattering_species.cc
+#  m_scattering_habit.cc)
+#target_link_libraries(scattering ${scatlib_LIBRARIES} fftw3)
 
 ########### testcases ###############
 

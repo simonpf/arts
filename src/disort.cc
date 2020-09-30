@@ -694,6 +694,7 @@ void reduced_1datm(Vector& p,
                    Vector& z,
                    Vector& t,
                    Matrix& vmr,
+                   Matrix & pbf,
                    Matrix& pnd,
                    ArrayOfIndex& cboxlims,
                    Index& ncboxremoved,
@@ -703,6 +704,7 @@ void reduced_1datm(Vector& p,
                    ConstVectorView t_profile,
                    ConstMatrixView vmr_profiles,
                    ConstMatrixView pnd_profiles,
+                   ConstMatrixView pbf_profiles,
                    const ArrayOfIndex& cloudbox_limits) {
   // Surface at p_grid[0] and we just need to copy the original data
   if (abs(z_surface - z_profile[0]) < 1e-3) {
@@ -710,6 +712,7 @@ void reduced_1datm(Vector& p,
     z = z_profile;
     t = t_profile;
     vmr = vmr_profiles;
+    pbf = pbf_profiles;
     pnd = pnd_profiles;
     cboxlims = cloudbox_limits;
     ncboxremoved = 0;
@@ -739,6 +742,9 @@ void reduced_1datm(Vector& p,
     t[0] = interp(itw, t, gp[0]);
     for (int i = 0; i < vmr.nrows(); i++) {
       vmr(i, 0) = interp(itw, vmr(i, joker), gp[0]);
+    }
+    for (int i = 0; i < pbf.nrows(); i++) {
+        pbf(i, 0) = interp(itw, pbf(i, joker), gp[0]);
     }
     // p (we need a matrix version of iwt to use the function *itw2p*)
     Matrix itw2(1, 2);
@@ -775,7 +781,10 @@ void run_cdisort(Workspace& ws,
                  ConstVectorView t_profile,
                  ConstMatrixView vmr_profiles,
                  ConstMatrixView pnd_profiles,
+                 ConstMatrixView pbf_profiles,
+                 const ArrayOfString &pbf_names,
                  const ArrayOfArrayOfSingleScatteringData& scat_data,
+                 const ArrayOfScatteringSpecies &scattering_species,
                  const Agenda& propmat_clearsky_agenda,
                  const ArrayOfIndex& cloudbox_limits,
                  const Numeric& surface_skin_t,
@@ -787,7 +796,7 @@ void run_cdisort(Workspace& ws,
                  const Verbosity& verbosity) {
   // Create an atmosphere starting at z_surface
   Vector p, z, t;
-  Matrix vmr, pnd;
+  Matrix vmr, pnd, pbf;
   ArrayOfIndex cboxlims;
   Index ncboxremoved;
   //
@@ -796,6 +805,7 @@ void run_cdisort(Workspace& ws,
                 t,
                 vmr,
                 pnd,
+                pbf,
                 cboxlims,
                 ncboxremoved,
                 p_grid,
@@ -804,6 +814,7 @@ void run_cdisort(Workspace& ws,
                 t_profile,
                 vmr_profiles,
                 pnd_profiles,
+                pbf_profiles,
                 cloudbox_limits);
 
   disort_state ds;
@@ -870,6 +881,15 @@ void run_cdisort(Workspace& ws,
   Matrix ext_bulk_par(nf, ds.nlyr + 1), abs_bulk_par(nf, ds.nlyr + 1);
   get_paroptprop(
       ext_bulk_par, abs_bulk_par, scat_data, pnd, t, p, cboxlims, f_grid);
+
+  auto bulk_properties = scattering_species.calculate_bulk_properties(ws,
+                                                                      pbf,
+                                                                      pbf_names,
+                                                                      t,
+                                                                      {},
+                                                                      false)
+  auto exinction = bulk_properties.get_extinction_coefficients();
+  auto absorption = bulk_properties.get_absorption_coefficients();
 
   // Optical depth of layers
   Matrix dtauc(nf, ds.nlyr);

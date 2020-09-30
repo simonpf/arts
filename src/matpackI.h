@@ -738,13 +738,13 @@ class VectorView : public ConstVectorView {
     a scalar. */
   VectorView(Numeric& a);
 
+  /** Explicit constructor. This one is used by Vector to initialize its
+      own VectorView part. */
+  VectorView(Numeric* data, const Range& range);
+
  protected:
   // Constructors:
   VectorView() = default;
-
-  /** Explicit constructor. This one is used by Vector to initialize its
-    own VectorView part. */
-  VectorView(Numeric* data, const Range& range);
 
   /** Recursive constructor. This is used to construct sub ranges from
     sub ranges. That means that the new range has to be interpreted

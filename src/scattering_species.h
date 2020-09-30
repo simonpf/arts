@@ -31,8 +31,8 @@
    This file contains the definition of the ScatteringSpecies class which
    represents all scattering agents in the atmosphere.
 */
-#include "array.h"
 #include "agenda_class.h"
+#include "array.h"
 #include "eigen.h"
 #include "optproperties.h"
 #include "scatlib/particle_model.h"
@@ -44,22 +44,72 @@
 
 class ScatteringSpecies {
  public:
-  Tensor5 get_phase_matrix(Workspace &ws) {
+  Tensor5 get_phase_matrix(Workspace& ws) {
     return impl_->get_phase_matrix(ws);
   }
 
-  std::shared_ptr<ScatteringSpeciesImpl> impl_;
+  ScatteringSpecies() {}
 
-  friend std::ostream & operator<<(std::ostream &out, const ScatteringSpecies &);
+  ScatteringSpecies(std::shared_ptr<ScatteringHabit> scattering_habit)
+      : impl_(scattering_habit) {}
+
+  void prepare_scattering_data(ScatteringPropertiesSpec specs) {
+    impl_->prepare_scattering_data(specs);
+  }
+
+  ScatteringProperties calculate_bulk_properties(
+      Workspace& ws,
+      const MatrixView pbp_field,
+      const ArrayOfString pbf_names,
+      const Vector temperature,
+      const ArrayOfRetrievalQuantity& jacobian_quantities,
+      bool jacobian_do) const {
+    impl_->calculate_bulk_properties(ws,
+                                     pbp_field,
+                                     pbf_names,
+                                     temperature,
+                                     jacobian_quantities,
+                                     jacobian_do);
+  }
+
+  friend std::ostream& operator<<(std::ostream& out, const ScatteringSpecies&);
 
  private:
+  std::shared_ptr<ScatteringSpeciesImpl> impl_ = nullptr;
 };
 
 class ArrayOfScatteringSpecies : public Array<ScatteringSpecies> {
-public:
+ public:
+  void prepare_scattering_data(ScatteringPropertiesSpec specs) {
+    for (auto& species : *this) {
+      species.prepare_scattering_data(specs);
+    }
+  }
 
-
-
+  ScatteringProperties calculate_bulk_properties(
+      Workspace& ws,
+      const MatrixView pbp_field,
+      const ArrayOfString pbf_names,
+      const Vector temperature,
+      const ArrayOfRetrievalQuantity& jacobian_quantities,
+      bool jacobian_do) {
+    auto result =
+        this->operator[](0).calculate_bulk_properties(ws,
+                                                    pbp_field,
+                                                    pbf_names,
+                                                    temperature,
+                                                    jacobian_quantities,
+                                                    jacobian_do);
+    for (Index i = 1; i < this->size(); ++i) {
+      result += this->operator[](i).calculate_bulk_properties(ws,
+                                                            pbp_field,
+                                                            pbf_names,
+                                                            temperature,
+                                                            jacobian_quantities,
+                                                            jacobian_do);
+    }
+    return result;
+  }
 };
 
 void Append(  // WS Generic Output:

@@ -29,8 +29,8 @@
 #define __ARTS_EIGEN_H__
 
 #include "Eigen/CXX11/Tensor"
-#include "matpackVII.h"
 #include "matpackV.h"
+#include "matpackVII.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vectors
@@ -40,11 +40,16 @@ using EigenVector = Eigen::Matrix<Numeric, 1, -1, Eigen::RowMajor>;
 using EigenVectorMap = Eigen::Map<EigenVector>;
 using EigenConstVectorMap = Eigen::Map<const EigenVector>;
 
-
 inline EigenConstVectorMap to_eigen(const Vector &vector) {
-    return EigenConstVectorMap{vector.get_c_array(), vector.nelem()};
+  return EigenConstVectorMap{vector.get_c_array(), vector.nelem()};
 }
 
+inline Vector to_arts(const EigenVector &vector) {
+  auto n = vector.size();
+  Vector result(n);
+  std::copy(vector.data(), vector.data() + n, result.get_c_array());
+  return result;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Tensors
@@ -56,7 +61,7 @@ template <int rank>
 using EigenConstTensorMap = Eigen::TensorMap<const EigenTensor<rank>>;
 
 inline EigenConstTensorMap<7> to_eigen(const Tensor7 &tensor) {
-    std::array<Eigen::Index, 7> dimensions = {tensor.nlibraries(),
+  std::array<Eigen::Index, 7> dimensions = {tensor.nlibraries(),
                                             tensor.nvitrines(),
                                             tensor.nshelves(),
                                             tensor.nbooks(),

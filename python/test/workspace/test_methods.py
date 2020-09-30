@@ -136,3 +136,7 @@ class TestMethods:
         with pytest.raises(Exception):
             ws.atmgeom_checked = 0
             self.ws.yCalc()
+
+    def test_wrong_argument_types(self):
+        with pytest.raises(Exception):
+            self.ws.yCalc(f_grid=self.ws.t_field)
