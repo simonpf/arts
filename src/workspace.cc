@@ -3913,6 +3913,13 @@ void Workspace::define_wsv_data() {
       DESCRIPTION(
           "Scattering habit used in PSD calculations.\n"),
       GROUP("ScatteringHabit")));
+                         NAME("scattering_species"),
+                         DESCRIPTION(
+                             "Array holding the atmosphere's scattering species.\n"
+                             "\n"
+                             "Standard approach to derive scat_data is to use *scat_dataCalc* to\n"
+                             "derive it from *scat_data_raw*."),
+                         GROUP("ArrayOfScatteringSpecies")));
 
   wsv_data.push_back(WsvRecord(
       NAME("scat_data_checked"),

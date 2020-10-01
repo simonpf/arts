@@ -27,6 +27,7 @@ set (ALL_ARTS_LIBRARIES
   methods
   matpack
   cdisort
+  scattering
   )
 
 file (GLOB HEADERFILES "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -129,7 +130,7 @@ add_executable (make_auto_md_h
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_h methods matpack ${scatlib_LIBRARIES} fftw3)
+target_link_libraries (make_auto_md_h methods matpack scattering)
 
 add_custom_command (
         OUTPUT auto_md.h
@@ -150,7 +151,7 @@ add_executable (make_auto_md_cc
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_cc methods matpack ${scatlib_LIBRARIES} fftw3)
+target_link_libraries (make_auto_md_cc methods matpack scattering)
 
 add_custom_command (
         OUTPUT auto_md.cc

@@ -33,18 +33,16 @@
    a particle size distribution.
 */
 #include <iostream>
+
 #include "agenda_class.h"
 #include "eigen.h"
-#include "jacobian.h"
-#include "matpackV.h"
 #include "optproperties.h"
 #include "scattering.h"
-
+#include "matpackV.h"
 #include "scatlib/particle_model.h"
 
 #ifndef __ARTS_SCATTERING_HABIT_H__
 #define __ARTS_SCATTERING_HABIT_H__
-
 
 namespace detail {
 
