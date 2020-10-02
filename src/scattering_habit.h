@@ -93,19 +93,23 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
 
     // Extracts agenda input from particle bulkprop field.
     Matrix get_agenda_input(Matrix pbp_field,
-                            ArrayOfString pbf_names);
+                            ArrayOfString pbf_names) const;
 
     // Get names of agenda input for which to calculate Jacobians.
     ArrayOfString get_dpnd_data_dx_names(ArrayOfRetrievalQuantity jacobian_quantities,
-                                         bool jacobian_do);
+                                         bool jacobian_do) const;
 
  public:
-  ScatteringHabit() {};
+  ScatteringHabit();
   ScatteringHabit(const String &name,
                   const ArrayOfSingleScatteringData &arts_scat_data,
                   const ArrayOfScatteringMetaData &meta_data,
                   const Agenda &pnd_agenda,
                   const ArrayOfString &pnd_agenda_input);
+  ScatteringHabit(const String name,
+                  const Agenda &pnd_agenda,
+                  ArrayOfString pnd_agenda_input,
+                  std::shared_ptr<scatlib::ParticleModel> particle_model);
 
   ScatteringHabit(const ScatteringHabit &) = default;
   ScatteringHabit &operator=(const ScatteringHabit &) = default;
@@ -131,15 +135,20 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
     return to_arts(particle_model_->get_d_max());
   }
 
-  void prepare_scattering_data(ScatteringPropertiesSpec specs) {
+  std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const {
+
+    scatlib::ParticleModel formatted;
     if (specs.format == Format::Spectral) {
-        particle_model_->to_spectral(specs.l_max, specs.m_max);
+        formatted = particle_model_->to_spectral(specs.l_max, specs.m_max);
     } else {
         particle_model_->to_gridded(to_eigen(specs.lon_inc),
                                     to_eigen(specs.lat_inc),
                                     to_eigen(specs.lon_scat),
                                     to_eigen(specs.lat_scat));
     }
+    auto new_model = std::make_shared<scatlib::ParticleModel>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
+    auto result = std::make_shared<ScatteringHabit>(name_, pnd_agenda_, pnd_agenda_input_, new_model);
+    return result;
   }
 
   ScatteringProperties calculate_bulk_properties(Workspace &ws,
@@ -147,19 +156,17 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
                                                  const ArrayOfString pbf_names,
                                                  const Vector temperature,
                                                  const ArrayOfRetrievalQuantity& jacobian_quantities,
-                                                 bool jacobian_do) const {}
+                                                 bool jacobian_do) const;
 
 
   friend std::ostream &operator<<(std::ostream &out, const ScatteringHabit &);
 
  private:
   String name_;
-  const Agenda *pnd_agenda_;
+  Agenda pnd_agenda_;
   ArrayOfString pnd_agenda_input_;
   std::shared_ptr<scatlib::ParticleModel> particle_model_;
 };
 
-// This is the key function and required to generate vtable.
-ScatteringHabit::~ScatteringHabit() {};
 
 #endif

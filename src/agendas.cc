@@ -586,7 +586,8 @@ void define_agenda_data() {
           "Note that content of this agenda array, *scat_species* and\n"
           "*pnd_agenda_array_input_names* must be consistent.\n"),
       OUTPUT("pnd_data", "dpnd_data_dx"),
-      INPUT("pnd_agenda_input_t",
+      INPUT("scattering_habit",
+            "pnd_agenda_input_t",
             "pnd_agenda_input",
             "pnd_agenda_input_names",
             "dpnd_data_dx_names")));

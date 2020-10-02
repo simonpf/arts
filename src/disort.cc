@@ -366,6 +366,10 @@ void get_paroptprop(MatrixView ext_bulk_par,
                       T_array,
                       dir_array,
                       -1);
+  std::cout << t_ok.nrows() << " / " << t_ok.ncols() << std::endl;
+  std::cout << " ----- " << std::endl;
+  std::cout << pnd_profiles.nrows() << " / " << pnd_profiles.ncols() << std::endl;
+
   opt_prop_ScatSpecBulk(ext_mat_ssbulk,
                         abs_vec_ssbulk,
                         ptype_ssbulk,
@@ -813,8 +817,8 @@ void run_cdisort(Workspace& ws,
                 z_surface,
                 t_profile,
                 vmr_profiles,
-                pnd_profiles,
                 pbf_profiles,
+                pnd_profiles,
                 cloudbox_limits);
 
   disort_state ds;
@@ -876,20 +880,28 @@ void run_cdisort(Workspace& ws,
 
   for (Index i = 0; i <= ds.nlyr; i++) ds.temper[i] = t[ds.nlyr - i];
 
+  std::cout << " t " << t << std::endl;
   Matrix ext_bulk_gas(nf, ds.nlyr + 1);
   get_gasoptprop(ws, ext_bulk_gas, propmat_clearsky_agenda, t, vmr, p, f_grid);
   Matrix ext_bulk_par(nf, ds.nlyr + 1), abs_bulk_par(nf, ds.nlyr + 1);
   get_paroptprop(
       ext_bulk_par, abs_bulk_par, scat_data, pnd, t, p, cboxlims, f_grid);
 
-  auto bulk_properties = scattering_species.calculate_bulk_properties(ws,
-                                                                      pbf,
-                                                                      pbf_names,
-                                                                      t,
-                                                                      {},
-                                                                      false)
-  auto exinction = bulk_properties.get_extinction_coefficients();
+  ScatteringPropertiesSpec scattering_specs{f_grid, static_cast<int>(Nlegendre)};
+  auto scattering_species_prepd = scattering_species.prepare_scattering_data(scattering_specs);
+  auto bulk_properties = scattering_species_prepd.calculate_bulk_properties(ws,
+                                                                            pbf,
+                                                                            pbf_names,
+                                                                            t,
+                                                                            {},
+                                                                            false);
+  auto extinction = bulk_properties.get_extinction_coefficients();
   auto absorption = bulk_properties.get_absorption_coefficients();
+
+  std::cout << scattering_species_prepd.size() << " // " << scattering_species.size() << std::endl;
+  std::cout << absorption << std::endl;
+  std::cout << std::endl << " ///////////// " << std::endl;
+  std::cout << abs_bulk_par << std::endl;
 
   // Optical depth of layers
   Matrix dtauc(nf, ds.nlyr);
@@ -923,6 +935,7 @@ void run_cdisort(Workspace& ws,
   Vector pfct_angs;
   get_angs(pfct_angs, scat_data, Npfct);
   Index nang = pfct_angs.nelem();
+
 
   Index nf_ssd = scat_data[0][0].f_grid.nelem();
   Tensor3 pha_bulk_par(nf_ssd, ds.nlyr + 1, nang);

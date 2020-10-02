@@ -39,8 +39,11 @@ void scattering_speciesAddScatteringHabit(
     const ArrayOfScatteringMetaData &meta_data,
     const Agenda &pnd_agenda,
     const ArrayOfString &pnd_agenda_input,
-    const Verbosity &/*verbosity*/) {
+    const Verbosity &verbosity) {
+    Agenda checked_agenda = pnd_agenda;
+    checked_agenda.set_name("pnd_agenda");
+    checked_agenda.check(workspace, verbosity);
   auto scattering_habit =
-      std::make_shared<ScatteringHabit>(name, scattering_data, meta_data, pnd_agenda, pnd_agenda_input);
+      std::make_shared<ScatteringHabit>(name, scattering_data, meta_data, checked_agenda, pnd_agenda_input);
   scattering_species.emplace_back(scattering_habit);
 }

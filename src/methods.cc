@@ -16636,7 +16636,7 @@ void define_md_data_raw() {
       GOUT(),
       GOUT_TYPE(),
       GOUT_DESC(),
-      IN(),
+      IN("scattering_species"),
       GIN("name", "scattering_data", "scattering_meta_data", "psd_agenda", "pnd_agenda_input"),
       GIN_TYPE("String", "ArrayOfSingleScatteringData", "ArrayOfScatteringMetaData", "Agenda", "ArrayOfString"),
       GIN_DEFAULT(NODEF, NODEF, NODEF, NODEF, NODEF),

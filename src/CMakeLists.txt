@@ -27,7 +27,6 @@ set (ALL_ARTS_LIBRARIES
   methods
   matpack
   cdisort
-  scattering
   )
 
 file (GLOB HEADERFILES "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -214,7 +213,6 @@ add_library (artscore STATIC
   m_absorptionlines.cc
   m_abs_lookup.cc
   m_agenda.cc
-  m_append.cc
   m_array.cc
   m_artstime.cc
   m_atmosphere.cc
@@ -254,7 +252,6 @@ add_library (artscore STATIC
   m_scattering_species.cc
   m_scattering_habit.cc
   m_sensor.cc
-  m_select.cc
   m_surface.cc
   m_telsem.cc
   m_tessem.cc

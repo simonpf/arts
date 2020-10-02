@@ -50,11 +50,11 @@ class ScatteringSpecies {
 
   ScatteringSpecies() {}
 
-  ScatteringSpecies(std::shared_ptr<ScatteringHabit> scattering_habit)
+  ScatteringSpecies(std::shared_ptr<ScatteringSpeciesImpl> scattering_habit)
       : impl_(scattering_habit) {}
 
-  void prepare_scattering_data(ScatteringPropertiesSpec specs) {
-    impl_->prepare_scattering_data(specs);
+  ScatteringSpecies prepare_scattering_data(ScatteringPropertiesSpec specs) const {
+    return ScatteringSpecies(impl_->prepare_scattering_data(specs));
   }
 
   ScatteringProperties calculate_bulk_properties(
@@ -64,12 +64,12 @@ class ScatteringSpecies {
       const Vector temperature,
       const ArrayOfRetrievalQuantity& jacobian_quantities,
       bool jacobian_do) const {
-    impl_->calculate_bulk_properties(ws,
-                                     pbp_field,
-                                     pbf_names,
-                                     temperature,
-                                     jacobian_quantities,
-                                     jacobian_do);
+    return impl_->calculate_bulk_properties(ws,
+                                            pbp_field,
+                                            pbf_names,
+                                            temperature,
+                                            jacobian_quantities,
+                                            jacobian_do);
   }
 
   friend std::ostream& operator<<(std::ostream& out, const ScatteringSpecies&);
@@ -80,10 +80,15 @@ class ScatteringSpecies {
 
 class ArrayOfScatteringSpecies : public Array<ScatteringSpecies> {
  public:
-  void prepare_scattering_data(ScatteringPropertiesSpec specs) {
-    for (auto& species : *this) {
-      species.prepare_scattering_data(specs);
+  ArrayOfScatteringSpecies() = default;
+  ArrayOfScatteringSpecies(size_t n) : Array<ScatteringSpecies>(n) {}
+
+  ArrayOfScatteringSpecies prepare_scattering_data(ScatteringPropertiesSpec specs) const {
+    ArrayOfScatteringSpecies result(size());
+    for (size_t i = 0; i < size(); ++i) {
+        result[i] = this->operator[](i).prepare_scattering_data(specs);
     }
+    return result;
   }
 
   ScatteringProperties calculate_bulk_properties(
@@ -92,15 +97,15 @@ class ArrayOfScatteringSpecies : public Array<ScatteringSpecies> {
       const ArrayOfString pbf_names,
       const Vector temperature,
       const ArrayOfRetrievalQuantity& jacobian_quantities,
-      bool jacobian_do) {
+      bool jacobian_do) const {
     auto result =
         this->operator[](0).calculate_bulk_properties(ws,
-                                                    pbp_field,
-                                                    pbf_names,
-                                                    temperature,
-                                                    jacobian_quantities,
-                                                    jacobian_do);
-    for (Index i = 1; i < this->size(); ++i) {
+                                                      pbp_field,
+                                                      pbf_names,
+                                                      temperature,
+                                                      jacobian_quantities,
+                                                      jacobian_do);
+    for (size_t i = 1; i < this->size(); ++i) {
       result += this->operator[](i).calculate_bulk_properties(ws,
                                                             pbp_field,
                                                             pbf_names,

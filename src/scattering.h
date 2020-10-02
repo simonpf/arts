@@ -37,8 +37,12 @@
 enum class Format {Gridded, Spectral};
 
 struct ScatteringPropertiesSpec {
-    ScatteringPropertiesSpec(int l_max_, int m_max=0);
-    ScatteringPropertiesSpec(Vector lon_scat_, Vector lat_scat_);
+    ScatteringPropertiesSpec(const Vector &f_grid,
+                             int l_max_,
+                             int m_max=0);
+    ScatteringPropertiesSpec(const Vector &f_grid,
+                             Vector lon_scat_,
+                             Vector lat_scat_);
 
     Format format;
     size_t l_max = 0;
@@ -47,6 +51,8 @@ struct ScatteringPropertiesSpec {
     Vector lat_inc{};
     Vector lon_scat{};
     Vector lat_scat{};
+
+    Vector f_grid{};
 };
 
 
@@ -59,7 +65,9 @@ class ScatteringProperties {
     auto n = data_.size();
     Matrix result(n_freqs, n);
     for (Index i = 0; i < n; ++i) {
-      auto extinction = data_[i].get_extinction_matrix();
+      EigenTensor<6> extinction = data_[i].get_extinction_matrix().chip<6>(0);
+      std::cout << extinction.dimension(0) << " / " << extinction.dimension(1) << " / " << extinction.dimension(5) << std::endl;
+      std::cout << "ext: " << extinction.size() << " / " << result(joker, i).nelem() << std::endl;
       result(joker, i) =
           VectorView(extinction.data(), Range(0, extinction.size()));
     }
@@ -71,6 +79,7 @@ class ScatteringProperties {
     Matrix result(n_freqs, n);
     for (Index i = 0; i < n; ++i) {
       auto absorption = data_[i].get_absorption_vector();
+      std::cout << "abs: " << absorption.size() << " / " << result(joker, i).nelem() << std::endl;
       result(joker, i) =
           VectorView(absorption.data(), Range(0, absorption.size()));
     }
@@ -95,6 +104,7 @@ class ScatteringProperties {
     for (Index i = 0; i < data_.size(); ++i) {
       data_[i] += other.data_[i];
     }
+    return *this;
   }
 
  private:
@@ -109,14 +119,13 @@ public:
     ScatteringSpeciesImpl(const ScatteringSpeciesImpl &) = default;
     virtual Tensor5 get_phase_matrix(Workspace &ws) = 0;
 
-    virtual void prepare_scattering_data(ScatteringPropertiesSpec specs) = 0;
+    virtual std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const = 0;
     virtual ScatteringProperties calculate_bulk_properties(Workspace &ws,
                                                            const MatrixView pbp_field,
                                                            const ArrayOfString pbf_names,
                                                            const Vector temperature,
                                                            const ArrayOfRetrievalQuantity& jacobian_quantities,
-                                                           bool jacobian_do) const {};
-
+                                                           bool jacobian_do) const = 0;
 };
 
 

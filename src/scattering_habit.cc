@@ -110,8 +110,9 @@ scatlib::SingleScatteringData artsscat_to_scatlib(
 
 }  // namespace detail
 
-//ScatteringHabit::ScatteringHabit() {}
-//ScatteringHabit::~ScatteringHabit() {}
+ScatteringHabit::ScatteringHabit() {}
+ScatteringHabit::~ScatteringHabit() {}
+
 ScatteringHabit::ScatteringHabit(
     const String &name,
     const ArrayOfSingleScatteringData &arts_scat_data,
@@ -119,7 +120,7 @@ ScatteringHabit::ScatteringHabit(
     const Agenda &pnd_agenda,
     const ArrayOfString &pnd_agenda_input)
     : name_(name),
-      pnd_agenda_(&pnd_agenda),
+      pnd_agenda_(pnd_agenda),
       pnd_agenda_input_(pnd_agenda_input)
 {
   Index n = arts_scat_data.size();
@@ -140,8 +141,18 @@ ScatteringHabit::ScatteringHabit(
   particle_model_ = std::make_shared<scatlib::ParticleModel>(d_eq, d_max, mass, model_data);
 }
 
+ScatteringHabit::ScatteringHabit(
+    const String name,
+    const Agenda &pnd_agenda,
+    ArrayOfString pnd_agenda_input,
+    std::shared_ptr<scatlib::ParticleModel> particle_model)
+    : name_(name),
+      pnd_agenda_(pnd_agenda),
+      pnd_agenda_input_(pnd_agenda_input),
+      particle_model_(particle_model) {}
+
 ArrayOfString ScatteringHabit::get_dpnd_data_dx_names(
-    ArrayOfRetrievalQuantity jacobian_quantities, bool jacobian_do) {
+    ArrayOfRetrievalQuantity jacobian_quantities, bool jacobian_do) const {
   ArrayOfString dpnd_data_dx_names = {};
   if (jacobian_do) {
     for (auto &jq : jacobian_quantities) {
@@ -156,8 +167,8 @@ ArrayOfString ScatteringHabit::get_dpnd_data_dx_names(
 }
 
 Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
-                                         ArrayOfString pbf_names) {
-  assert(pbp_field.ncols() == pbf_names.size());
+                                         ArrayOfString pbf_names) const {
+  assert(pbp_field.nrows() == pbf_names.size());
 
   Index n_inputs = pnd_agenda_input_.size();
   ArrayOfIndex column_indices(n_inputs);
@@ -174,47 +185,51 @@ Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
     }
   }
 
-  Matrix agenda_input(pbp_field.nrows(), n_inputs);
+  std::cout << pbp_field.nrows() << " / " << pbp_field.ncols() << std::endl;
+  Matrix agenda_input(pbp_field.ncols(), n_inputs);
+  std::cout << agenda_input.nrows() << " / " << agenda_input.ncols() << std::endl;
   for (size_t i = 0; i < n_inputs; ++i) {
-      agenda_input(joker, i) = pbp_field(joker, column_indices[i]);
+      agenda_input(joker, i) = pbp_field(column_indices[i], joker);
   }
 
   return agenda_input;
 }
 
-//ScatteringProperties ScatteringHabit::calculate_bulk_properties(Workspace &ws,
-//const MatrixView pbp_field,
-//const ArrayOfString pbf_names,
-//const Vector temperature,
-//const ArrayOfRetrievalQuantity &jacobian_quantities,
-//bool jacobian_do) {
-//
-//Matrix pnd_data;
-//Tensor3 dpnd_data_dx;
-//
-//
-//Matrix input = get_agenda_input(pbp_field, pbf_names);
-//ArrayOfString dpnd_data_dx_names = get_dpnd_data_dx_names(jacobian_quantities,
-//jacobian_do);
-//
-//pnd_agendaExecute(ws,
-//pnd_data,
-//dpnd_data_dx,
-//temperature,
-//input,
-//pnd_agenda_input_,
-//dpnd_data_dx_names,
-                      //*pnd_agenda_);
-//
-//auto n_levels = pnd_data.nrows();
-//Array<scatlib::SingleScatteringData> bulk_properties(n_levels);
-//for (Index i = 0; i < n_levels; ++i) {
-//bulk_properties[i] = particle_model_->calculate_bulk_properties(temperature[i],
-//to_eigen(pnd_data(i, joker)));
-//}
+ScatteringProperties ScatteringHabit::calculate_bulk_properties(
+    Workspace &ws,
+    const MatrixView pbp_field,
+    const ArrayOfString pbf_names,
+    const Vector temperature,
+    const ArrayOfRetrievalQuantity &jacobian_quantities,
+    bool jacobian_do) const {
+  Matrix pnd_data;
+  Tensor3 dpnd_data_dx;
 
-    return ScatteringProperties(bulk_properties);
+  Matrix input = get_agenda_input(pbp_field, pbf_names);
+  ArrayOfString dpnd_data_dx_names =
+      get_dpnd_data_dx_names(jacobian_quantities, jacobian_do);
 
+  pnd_agendaExecute(ws,
+                    pnd_data,
+                    dpnd_data_dx,
+                    *this,
+                    temperature,
+                    input,
+                    pnd_agenda_input_,
+                    dpnd_data_dx_names,
+                    pnd_agenda_);
+
+  auto n_levels = pnd_data.nrows();
+  Array<scatlib::SingleScatteringData> bulk_properties(n_levels);
+  for (Index i = 0; i < n_levels; ++i) {
+      std::cout << i << " :: " << pnd_data(i, joker) << std::endl;
+      EigenVector number_densities = to_eigen(pnd_data(i, joker));
+    bulk_properties[i] = particle_model_->calculate_bulk_properties(
+        temperature[i], number_densities);
+  }
+  std::cout << "done" << std::endl;
+
+  return ScatteringProperties(bulk_properties);
 }
 
 std::ostream & operator<<(std::ostream &output, const ScatteringHabit &habit) {
