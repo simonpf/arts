@@ -26,10 +26,13 @@
 
   \brief  Implementation of scattering.h
 */
+#include "scattering.h"
 
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(Vector lon_scat_,
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_,
+                                                   Vector lon_scat_,
                                                    Vector lat_scat_)
     : format(Format::Gridded),
+      f_grid(f_grid_),
       lon_inc(Vector(1)),
       lat_inc(Vector(1)),
       lon_scat(lon_scat),
@@ -38,6 +41,15 @@ ScatteringPropertiesSpec::ScatteringPropertiesSpec(Vector lon_scat_,
   lat_inc = 0.0;
 }
 
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(Index l_max_,
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector& f_grid_,
+                                                   Index l_max_,
                                                    Index m_max_)
-    : format(Format::Spectral), lon_scat(lon_scat), lat_scat(lat_scat) {}
+    : format(Format::Spectral),
+      f_grid(f_grid_),
+      l_max(l_max_),
+      m_max(m_max),
+      lon_scat(lon_scat),
+      lat_scat(lat_scat) {
+    std::cout << "LMAX:::" << l_max << std::endl;
+
+      }

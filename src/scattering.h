@@ -30,6 +30,7 @@
 
 #include "jacobian.h"
 #include "matpackI.h"
+#include "eigen.h"
 
 #ifndef __ARTS_SCATTERING__
 #define __ARTS_SCATTERING__
@@ -38,8 +39,8 @@ enum class Format {Gridded, Spectral};
 
 struct ScatteringPropertiesSpec {
     ScatteringPropertiesSpec(const Vector &f_grid,
-                             int l_max_,
-                             int m_max=0);
+                             Index l_max_,
+                             Index m_max=0);
     ScatteringPropertiesSpec(const Vector &f_grid,
                              Vector lon_scat_,
                              Vector lat_scat_);
@@ -59,15 +60,13 @@ struct ScatteringPropertiesSpec {
 class ScatteringProperties {
  public:
   ScatteringProperties(Array<scatlib::SingleScatteringData> data)
-      : data_(data), n_freqs(data[0].get_f_grid().size()) {}
+      : data_(data), n_freqs_(data[0].get_f_grid().size()) {}
 
   Matrix get_extinction_coefficients() {
     auto n = data_.size();
-    Matrix result(n_freqs, n);
+    Matrix result(n_freqs_, n);
     for (Index i = 0; i < n; ++i) {
       EigenTensor<6> extinction = data_[i].get_extinction_matrix().chip<6>(0);
-      std::cout << extinction.dimension(0) << " / " << extinction.dimension(1) << " / " << extinction.dimension(5) << std::endl;
-      std::cout << "ext: " << extinction.size() << " / " << result(joker, i).nelem() << std::endl;
       result(joker, i) =
           VectorView(extinction.data(), Range(0, extinction.size()));
     }
@@ -76,26 +75,31 @@ class ScatteringProperties {
 
   Matrix get_absorption_coefficients() {
     auto n = data_.size();
-    Matrix result(n_freqs, n);
+    Matrix result(n_freqs_, n);
     for (Index i = 0; i < n; ++i) {
       auto absorption = data_[i].get_absorption_vector();
-      std::cout << "abs: " << absorption.size() << " / " << result(joker, i).nelem() << std::endl;
       result(joker, i) =
           VectorView(absorption.data(), Range(0, absorption.size()));
     }
     return result;
   }
 
-  Matrix get_spectral_coefficients() {
+  Tensor3 get_spectral_coefficients() {
     auto n = data_.size();
     Index n_spectral_coeffs_ =
         data_[0].get_phase_matrix_spectral().dimension(5);
-    Matrix result(n_spectral_coeffs_, n);
+    Tensor3 result(n_freqs_, n_spectral_coeffs_, n);
     for (Index i = 0; i < n; ++i) {
-      EigenTensor<5> phase_matrix =
-          data_[i].get_phase_matrix_spectral().real().chip<5>(0);
-      result(joker, i) =
-          VectorView(phase_matrix.data(), Range(0, phase_matrix.size()));
+      EigenTensor<6> phase_matrix =
+          data_[i].get_phase_matrix_spectral().real();
+      std::cout << "dim: " << phase_matrix.dimension(0) << std::endl;
+      std::cout << "dim: " << phase_matrix.dimension(1) << std::endl;
+      std::cout << "dim: " << phase_matrix.dimension(2) << std::endl;
+      std::cout << "dim: " << phase_matrix.dimension(3) << std::endl;
+      std::cout << "dim: " << phase_matrix.dimension(4) << std::endl;
+      std::cout << "dim: " << phase_matrix.dimension(5) << std::endl;
+      std::cout << "nspec: " << n_spectral_coeffs_ << std::endl;
+
     }
     return result;
   }
@@ -109,7 +113,7 @@ class ScatteringProperties {
 
  private:
   Array<scatlib::SingleScatteringData> data_;
-  Index n_freqs;
+  Index n_freqs_;
 };
 
 class ScatteringSpeciesImpl {

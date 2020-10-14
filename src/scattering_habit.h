@@ -139,6 +139,7 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
 
     scatlib::ParticleModel formatted;
     if (specs.format == Format::Spectral) {
+        std::cout << "LMAX:: " << specs.l_max << std::endl;
         formatted = particle_model_->to_spectral(specs.l_max, specs.m_max);
     } else {
         particle_model_->to_gridded(to_eigen(specs.lon_inc),

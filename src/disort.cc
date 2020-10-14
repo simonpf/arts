@@ -887,7 +887,7 @@ void run_cdisort(Workspace& ws,
   get_paroptprop(
       ext_bulk_par, abs_bulk_par, scat_data, pnd, t, p, cboxlims, f_grid);
 
-  ScatteringPropertiesSpec scattering_specs{f_grid, static_cast<int>(Nlegendre)};
+  ScatteringPropertiesSpec scattering_specs(f_grid, static_cast<int>(Nlegendre));
   auto scattering_species_prepd = scattering_species.prepare_scattering_data(scattering_specs);
   auto bulk_properties = scattering_species_prepd.calculate_bulk_properties(ws,
                                                                             pbf,
@@ -898,10 +898,6 @@ void run_cdisort(Workspace& ws,
   auto extinction = bulk_properties.get_extinction_coefficients();
   auto absorption = bulk_properties.get_absorption_coefficients();
 
-  std::cout << scattering_species_prepd.size() << " // " << scattering_species.size() << std::endl;
-  std::cout << absorption << std::endl;
-  std::cout << std::endl << " ///////////// " << std::endl;
-  std::cout << abs_bulk_par << std::endl;
 
   // Optical depth of layers
   Matrix dtauc(nf, ds.nlyr);
@@ -946,6 +942,12 @@ void run_cdisort(Workspace& ws,
   // Legendre polynomials of phase function
   Tensor3 pmom(nf_ssd, ds.nlyr, Nlegendre, 0.);
   get_pmom(pmom, pfct_bulk_par, pfct_angs, Nlegendre);
+
+  std::cout << pmom << std::endl;
+  std::cout << " /////////////////// " << std::endl;
+  auto bulk_phase_function = bulk_properties.get_spectral_coefficients();
+
+  std::cout << bulk_phase_function << std::endl;
 
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
     sprintf(ds.header, "ARTS Calc f_index = %ld", f_index);

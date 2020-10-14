@@ -52,13 +52,13 @@ EigenTensor<7> extract_forward_scattering_coeff(
   return backward_scattering_coeff.reshape(dimensions);
 }
 
-EigenTensor<7> artsscat_to_scatlib(const Tensor5 &tensor) {
+EigenTensor<7> arts_to_scatlib(const Tensor5 &tensor) {
   EigenTensor<5> tensor_eigen = to_eigen(tensor);
   auto result = scatlib::eigen::unsqueeze<5, 6>(tensor_eigen);
   return scatlib::eigen::cycle_dimensions(result);
 }
 
-scatlib::SingleScatteringData artsscat_to_scatlib(
+scatlib::SingleScatteringData arts_to_scatlib(
     const SingleScatteringData &arts_data) {
   EigenVector f_grid = to_eigen(arts_data.f_grid);
   EigenVector t_grid = to_eigen(arts_data.T_grid);
@@ -67,8 +67,8 @@ scatlib::SingleScatteringData artsscat_to_scatlib(
   EigenVector lon_inc = to_eigen(arts_data.aa_grid);
   EigenVector lat_inc = to_eigen(arts_data.za_grid);
   auto phase_matrix = to_eigen(arts_data.pha_mat_data);
-  auto extinction_matrix = artsscat_to_scatlib(arts_data.ext_mat_data);
-  auto absorption_vector = artsscat_to_scatlib(arts_data.abs_vec_data);
+  auto extinction_matrix = arts_to_scatlib(arts_data.ext_mat_data);
+  auto absorption_vector = arts_to_scatlib(arts_data.abs_vec_data);
   auto backward_scattering_coeff =
       extract_backward_scattering_coeff(phase_matrix);
   auto forward_scattering_coeff =
@@ -100,8 +100,8 @@ ScatteringHabit::ScatteringHabit(
   EigenVector d_eq(n), d_max(n), mass(n);
 
   for (size_t i = 0; i < arts_scat_data.size(); ++i) {
-    auto scattering_data = detail::artsscat_to_scatlib(arts_scat_data[i]);
-    model_data.push_back(scattering_data);
+    auto scattering_data = detail::arts_to_scatlib(arts_scat_data[i]);
+    model_data.push_back(scattering_data.regrid());
 
     auto meta = meta_data[i];
     d_eq[i] = meta.diameter_volume_equ;
