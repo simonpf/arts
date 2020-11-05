@@ -366,10 +366,6 @@ void get_paroptprop(MatrixView ext_bulk_par,
                       T_array,
                       dir_array,
                       -1);
-  std::cout << t_ok.nrows() << " / " << t_ok.ncols() << std::endl;
-  std::cout << " ----- " << std::endl;
-  std::cout << pnd_profiles.nrows() << " / " << pnd_profiles.ncols() << std::endl;
-
   opt_prop_ScatSpecBulk(ext_mat_ssbulk,
                         abs_vec_ssbulk,
                         ptype_ssbulk,
@@ -880,14 +876,24 @@ void run_cdisort(Workspace& ws,
 
   for (Index i = 0; i <= ds.nlyr; i++) ds.temper[i] = t[ds.nlyr - i];
 
-  std::cout << " t " << t << std::endl;
   Matrix ext_bulk_gas(nf, ds.nlyr + 1);
   get_gasoptprop(ws, ext_bulk_gas, propmat_clearsky_agenda, t, vmr, p, f_grid);
   Matrix ext_bulk_par(nf, ds.nlyr + 1), abs_bulk_par(nf, ds.nlyr + 1);
   get_paroptprop(
       ext_bulk_par, abs_bulk_par, scat_data, pnd, t, p, cboxlims, f_grid);
 
-  ScatteringPropertiesSpec scattering_specs(f_grid, static_cast<int>(Nlegendre));
+  //ScatteringPropertiesSpec scattering_specs(f_grid, 1, static_cast<int>(Nlegendre - 1));
+  Vector lon_scat(1);
+  lon_scat[0] = M_PI;
+  Vector lat_scat = za_grid;
+  lat_scat *= DEG2RAD;
+  ScatteringPropertiesSpec scattering_specs(f_grid,
+                                            ReferenceFrame::ScatteringPlane,
+                                            1,
+                                            Nlegendre - 1,
+                                            0,
+ 4.0 * M_PI);
+  //ScatteringPropertiesSpec scattering_specs(f_grid, 1, lon_scat, lat_scat, 8.0 * M_PI);
   auto scattering_species_prepd = scattering_species.prepare_scattering_data(scattering_specs);
   auto bulk_properties = scattering_species_prepd.calculate_bulk_properties(ws,
                                                                             pbf,
@@ -897,6 +903,11 @@ void run_cdisort(Workspace& ws,
                                                                             false);
   auto extinction = bulk_properties.get_extinction_coefficients();
   auto absorption = bulk_properties.get_absorption_coefficients();
+
+  std::cout << "EXTINCTION REF: " << std::endl;
+  std::cout << ext_bulk_par << std::endl;
+  std::cout << "EXTINCTION CHECK: " << std::endl;
+  std::cout << extinction << std::endl;
 
 
   // Optical depth of layers
@@ -932,22 +943,13 @@ void run_cdisort(Workspace& ws,
   get_angs(pfct_angs, scat_data, Npfct);
   Index nang = pfct_angs.nelem();
 
-
   Index nf_ssd = scat_data[0][0].f_grid.nelem();
   Tensor3 pha_bulk_par(nf_ssd, ds.nlyr + 1, nang);
   get_parZ(pha_bulk_par, scat_data, pnd, t, pfct_angs, cboxlims);
   Tensor3 pfct_bulk_par(nf_ssd, ds.nlyr, nang);
   get_pfct(pfct_bulk_par, pha_bulk_par, ext_bulk_par, abs_bulk_par, cboxlims);
 
-  // Legendre polynomials of phase function
-  Tensor3 pmom(nf_ssd, ds.nlyr, Nlegendre, 0.);
-  get_pmom(pmom, pfct_bulk_par, pfct_angs, Nlegendre);
-
-  std::cout << pmom << std::endl;
-  std::cout << " /////////////////// " << std::endl;
-  auto bulk_phase_function = bulk_properties.get_spectral_coefficients();
-
-  std::cout << bulk_phase_function << std::endl;
+  auto coeffs = average_and_invert(bulk_properties.get_legendre_coefficients());
 
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
     sprintf(ds.header, "ARTS Calc f_index = %ld", f_index);
@@ -967,8 +969,8 @@ void run_cdisort(Workspace& ws,
     ds.bc.albedo = surface_scalar_reflectivity[f_index];
 
     std::memcpy(ds.pmom,
-                pmom(f_index, joker, joker).get_c_array(),
-                sizeof(Numeric) * pmom.nrows() * pmom.ncols());
+                coeffs(f_index, joker, joker).get_c_array(),
+                sizeof(Numeric) * coeffs.nrows() * coeffs.ncols());
 
     c_disort(&ds, &out);
 
@@ -1169,4 +1171,23 @@ void surf_albedoCalc(Workspace& ws,
       throw runtime_error(os.str());
     }
   }
+}
+
+Tensor3 average_and_invert(const Tensor3& in) {
+  Index npages = in.npages();
+  Index nrows = in.nrows();
+  Index ncols = in.ncols();
+  Tensor3 result(npages, nrows - 1, ncols, 0.0);
+  for (Index i = 0; i < nrows - 1; ++i) {
+      result(joker, i, joker) += in(joker, nrows - i - 1, joker);
+      result(joker, i, joker) += in(joker, nrows - i - 2, joker);
+  }
+  for (Index i = 0; i < npages; ++i) {
+      for (Index j = 0; j < nrows - 1; ++j) {
+          if (result(i, j, 0) != 0.0) {
+              result(i, j, joker) *= 1.0 / (result(i, j, 0));
+          }
+      }
+  }
+  return result;
 }

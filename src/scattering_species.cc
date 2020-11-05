@@ -2,16 +2,6 @@
 #include "m_append.h"
 #include "m_select.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// ScatteringPropertiesSpec
-////////////////////////////////////////////////////////////////////////////////
-
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_, Index l_max_, Index m_max_)
-    : format(Format::Spectral), f_grid(f_grid_), l_max(l_max_) {}
-
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_, Vector lon_scat_, Vector lat_scat_)
-    : format(Format::Gridded), f_grid(f_grid_), lon_scat(lon_scat_), lat_scat(lat_scat_) {}
-
 
 std::ostream & operator<<(std::ostream &out, const ScatteringSpecies &s) {
     out << "A scattering species.";

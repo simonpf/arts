@@ -401,4 +401,7 @@ void surf_albedoCalc(Workspace& ws,
                      ConstVectorView scat_za_grid,
                      const Numeric& surf_alt,
                      const Verbosity& verbosity);
+
+Tensor3 average_and_invert(const Tensor3 &in);
+
 #endif /* disort_h */

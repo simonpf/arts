@@ -1099,6 +1099,7 @@ class MatrixView : public ConstMatrixView {
   using ConstMatrixView::get;
 
   constexpr MatrixView(const MatrixView&) = default;
+  MatrixView(Numeric* data, const Range& r, const Range& c);
 
   // Typedef for compatibility with STL
   typedef Iterator2D iterator;
@@ -1174,7 +1175,6 @@ class MatrixView : public ConstMatrixView {
  protected:
   // Constructors:
   MatrixView() = default;
-  MatrixView(Numeric* data, const Range& r, const Range& c);
   MatrixView(Numeric* data,
              const Range& pr,
              const Range& pc,

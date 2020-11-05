@@ -291,6 +291,7 @@ add_library (artscore STATIC
   special_interp.cc
   species_data.cc
   species_info.cc
+  scattering.cc
   scattering_habit.cc
   scattering_species.cc
   surface.cc

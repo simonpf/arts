@@ -53,6 +53,93 @@ extern const Numeric RAD2DEG;
 extern const Numeric SPEED_OF_LIGHT;
 extern const Numeric COSMIC_BG_TEMP;
 
+
+Tensor5 to_rt4_format(Tensor4 absorption_vector) {
+
+    Index n_freqs = absorption_vector.nbooks();
+    Index n_layers = absorption_vector.npages();
+    Index n_lat_inc = absorption_vector.nrows();
+    Index stokes_dim = absorption_vector.ncols();
+    Index n_mu = n_lat_inc / 2;
+    Tensor5 absorption_averaged(n_freqs, n_layers - 1, 2, n_mu, stokes_dim, 0.0);
+    for (Index layer_index = 0; layer_index < n_layers - 1; ++layer_index) {
+        for (Index freq_index = 0; freq_index < n_freqs; ++freq_index) {
+            for (Index  mu_index = 0; mu_index < n_mu; ++mu_index) {
+                absorption_averaged(freq_index, layer_index, 0, mu_index, joker)
+                    = 0.5 * absorption_vector(freq_index, layer_index, mu_index, joker)
+                    + 0.5 * absorption_vector(freq_index, layer_index + 1, mu_index, joker);
+                absorption_averaged(freq_index, layer_index, 1, mu_index, joker)
+                    = 0.5 * absorption_vector(freq_index, layer_index, n_mu + mu_index, joker)
+                    + 0.5 * absorption_vector(freq_index, layer_index + 1, n_mu + mu_index, joker);
+            }
+        }
+    }
+    return absorption_averaged;
+}
+
+Tensor6 to_rt4_format(Tensor5 extinction_matrix) {
+
+    Index n_freqs = extinction_matrix.nshelves();
+    Index n_layers = extinction_matrix.nbooks();
+    Index n_lat_inc = extinction_matrix.npages();
+    Index stokes_dim = extinction_matrix.nrows();
+    Index n_mu = n_lat_inc / 2;
+    Tensor6 extinction_averaged(n_freqs, n_layers - 1, 2, n_mu, stokes_dim, stokes_dim, 0.0);
+    for (Index layer_index = 0; layer_index < n_layers - 1; ++layer_index) {
+        for (Index freq_index = 0; freq_index < n_freqs; ++freq_index) {
+            for (Index  mu_index = 0; mu_index < n_mu; ++mu_index) {
+                extinction_averaged(freq_index, layer_index, 0, mu_index, joker, joker) +=
+                    extinction_matrix(freq_index, layer_index, mu_index, joker, joker);
+                extinction_averaged(freq_index, layer_index, 0, mu_index, joker, joker) +=
+                    extinction_matrix(freq_index, layer_index + 1, mu_index, joker, joker);
+                extinction_averaged(freq_index, layer_index, 1, mu_index, joker, joker) +=
+                    extinction_matrix(freq_index, layer_index, n_mu + mu_index, joker, joker);
+                extinction_averaged(freq_index, layer_index, 1, mu_index, joker, joker) +=
+                    extinction_matrix(freq_index, layer_index + 1, n_mu + mu_index, joker, joker);
+            }
+        }
+    }
+    extinction_averaged *= 0.5;
+    return extinction_averaged;
+}
+
+Tensor7 to_rt4_format(Tensor6 scattering_matrix) {
+
+    Index n_freqs = scattering_matrix.nvitrines();
+    Index n_layers = scattering_matrix.nshelves();
+    Index n_lat_inc = scattering_matrix.nbooks();
+    Index n_lat_scat = scattering_matrix.npages();
+    Index stokes_dim = scattering_matrix.nrows();
+    Index n_mu = n_lat_inc / 2;
+    Tensor7 scattering_averaged(n_freqs, n_layers - 1, 4, n_mu, stokes_dim, n_mu, stokes_dim, 0.0);
+    for (Index layer_index = 0; layer_index < n_layers - 1; ++layer_index) {
+        for (Index freq_index = 0; freq_index < n_freqs; ++freq_index) {
+            for (Index  mu_index_1 = 0; mu_index_1 < n_mu; ++mu_index_1) {
+                for (Index mu_index_2 = 0; mu_index_2 < n_mu; ++mu_index_2) {
+                    scattering_averaged(freq_index, layer_index, 0, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index, mu_index_1, mu_index_2, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 0, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index + 1, mu_index_1, mu_index_2, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 1, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index, mu_index_1 + n_mu, mu_index_2, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 1, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index + 1, mu_index_1 + n_mu, mu_index_2, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 2, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index, n_mu + mu_index_1, mu_index_2 + n_mu, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 2, mu_index_1, joker,  mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index + 1, n_mu + mu_index_1, mu_index_2 + n_mu, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 3, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index, mu_index_1 + n_mu, mu_index_2 + n_mu, joker, joker);
+                    scattering_averaged(freq_index, layer_index, 3, mu_index_1, joker, mu_index_2, joker) +=
+                        scattering_matrix(freq_index, layer_index + 1, mu_index_1 + n_mu, mu_index_2 + n_mu, joker, joker);
+                }
+            }
+        }
+    }
+    scattering_averaged *= 0.5;
+    return scattering_averaged;
+}
+
 void check_rt4_input(  // Output
     Index& nhstreams,
     Index& nhza,
@@ -351,7 +438,10 @@ void run_rt4(Workspace& ws,
              ConstVectorView t_profile,
              ConstMatrixView vmr_profiles,
              ConstMatrixView pnd_profiles,
+             ConstMatrixView pbf_profiles,
+             const ArrayOfString &pbf_names,
              const ArrayOfArrayOfSingleScatteringData& scat_data,
+             const ArrayOfScatteringSpecies &scattering_species,
              const Agenda& propmat_clearsky_agenda,
              const ArrayOfIndex& cloudbox_limits,
              const Index& stokes_dim,
@@ -397,7 +487,7 @@ void run_rt4(Workspace& ws,
                 surf_altitude,
                 t_profile,
                 vmr_profiles,
-                pnd_profiles,
+                pbf_profiles,
                 pnd_profiles,
                 cloudbox_limits);
 
@@ -437,8 +527,7 @@ void run_rt4(Workspace& ws,
   Tensor6 extinct_matrix(
       1, num_scatlayers, 2, nummu, stokes_dim, stokes_dim, 0.);
   Tensor5 emis_vector(1, num_scatlayers, 2, nummu, stokes_dim, 0.);
-
-  // if there is no scatt particle at all, we don't need to calculate the
+// if there is no scatt particle at all, we don't need to calculate the
   // scat properties (FIXME: that should rather be done by a proper setting
   // of scat_layers).
   Vector pnd_per_level(pnd.ncols());
@@ -449,6 +538,8 @@ void run_rt4(Workspace& ws,
   for (Index i = 0; i < cboxlims[1] - cboxlims[0]; i++) {
     scatlayers[num_layers - 1 - cboxlims[0] - i] = float(i + 1);
   }
+
+
 
   // Output variables
   Tensor3 up_rad(num_layers + 1, nummu, stokes_dim, 0.);
@@ -481,6 +572,7 @@ void run_rt4(Workspace& ws,
     }
   }
 
+
   // FIXME: once, all old optprop scheme incl. the applied agendas is removed,
   // we can remove this as well.
   Vector za_grid_orig;
@@ -496,7 +588,31 @@ void run_rt4(Workspace& ws,
   Index nummu_new = 0;
   // Loop over frequencies
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
+
+      Vector aa_grid(1, 0.0);
+      Vector f_grid_1(1, f_grid[f_index]);
+      Vector lat_scat = za_grid;
+      lat_scat *= DEG2RAD;
+      ScatteringPropertiesSpec scattering_specs(f_grid_1,
+                                               ReferenceFrame::Lab,
+                                                stokes_dim,
+                                                lat_scat,
+                                                aa_grid,
+                                                lat_scat,
+                                                4.0 * M_PI);
+      std::cout << "lat_scat: " << lat_scat << std::endl;
+      auto scattering_species_prepd = scattering_species.prepare_scattering_data(scattering_specs);
+      auto bulk_properties = scattering_species_prepd.calculate_bulk_properties(ws,
+                                                                                pbf,
+                                                                                pbf_names,
+                                                                                t,
+                                                                                {},
+                                                                                false);
+      auto absorption = to_rt4_format(bulk_properties.get_absorption_vector());
+      auto extinction = to_rt4_format(bulk_properties.get_extinction_matrix());
+      auto scattering_matrix = to_rt4_format(bulk_properties.get_scattering_matrix());
     // Wavelength [um]
+
     Numeric wavelength;
     wavelength = 1e6 * SPEED_OF_LIGHT / f_grid[f_index];
 
@@ -558,6 +674,10 @@ void run_rt4(Workspace& ws,
                         pfct_threshold,
                         auto_inc_nstreams,
                         verbosity);
+        std::cout << "SCAT REF: " << std::endl;
+        std::cout << scatter_matrix << std::endl;
+        std::cout << "SCAT: " << std::endl;
+        std::cout << scattering_matrix << std::endl;
       } else {
         pfct_failed = 1;
       }

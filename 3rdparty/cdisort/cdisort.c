@@ -6074,9 +6074,9 @@ void c_check_inputs(disort_state *ds,
 
   for (lc = 1; lc <= ds->nlyr; lc++) {
     for (k = 0; k <= ds->nmom; k++) {
-      if (PMOM(k,lc) < -1. || PMOM(k,lc) > 1.) {
-        inperr = c_write_bad_var(VERBOSE,"PMOM(k,lc)");
-      }
+        if (PMOM(k,lc) < -1. || PMOM(k,lc) > 1.) {
+          inperr = c_write_bad_var(VERBOSE,"PMOM(k,lc)");
+        }
     }
   }
 

@@ -57,7 +57,7 @@ class ScatteringSpecies {
     return ScatteringSpecies(impl_->prepare_scattering_data(specs));
   }
 
-  ScatteringProperties calculate_bulk_properties(
+  BulkScatteringProperties calculate_bulk_properties(
       Workspace& ws,
       const MatrixView pbp_field,
       const ArrayOfString pbf_names,
@@ -91,7 +91,7 @@ class ArrayOfScatteringSpecies : public Array<ScatteringSpecies> {
     return result;
   }
 
-  ScatteringProperties calculate_bulk_properties(
+  BulkScatteringProperties calculate_bulk_properties(
       Workspace& ws,
       const MatrixView pbp_field,
       const ArrayOfString pbf_names,
@@ -107,11 +107,11 @@ class ArrayOfScatteringSpecies : public Array<ScatteringSpecies> {
                                                       jacobian_do);
     for (size_t i = 1; i < this->size(); ++i) {
       result += this->operator[](i).calculate_bulk_properties(ws,
-                                                            pbp_field,
-                                                            pbf_names,
-                                                            temperature,
-                                                            jacobian_quantities,
-                                                            jacobian_do);
+                                                              pbp_field,
+                                                              pbf_names,
+                                                              temperature,
+                                                              jacobian_quantities,
+                                                              jacobian_do);
     }
     return result;
   }

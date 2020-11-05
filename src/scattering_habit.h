@@ -89,6 +89,19 @@ scatlib::SingleScatteringData arts_to_scatlib(
 
 }  // namespace detail
 
+/** ScatteringHabit
+ *
+ * A scattering habit describes an atmospheric scattering species through  an
+ * explicit particle model of scattering properties at given particle sizes and
+ * a parametrized PSD that describes the distribution of those sizes throughout
+ * the atmosphere.
+ *
+ * This class implements the abstract interface for scattering species (defined
+ * by ScatteringSpeciesImpl) and instances of this class are used as a elements
+ * of the *scattering_species* WSM containing the atmosphere's scattering
+ * species.
+ *
+ */
 class ScatteringHabit : public ScatteringSpeciesImpl {
 
     // Extracts agenda input from particle bulkprop field.
@@ -101,6 +114,17 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
 
  public:
   ScatteringHabit();
+  /** Create ScatteringHabit
+   *
+   * @param name The name of the scattering species.
+   * @param arts_scat_data The ensemble scattering data describing the particles
+   * that make up the habit.
+   * @param The particle meta data corresponding to the particles in arts_scat_data
+   * @
+   *
+
+   */
+
   ScatteringHabit(const String &name,
                   const ArrayOfSingleScatteringData &arts_scat_data,
                   const ArrayOfScatteringMetaData &meta_data,
@@ -135,30 +159,16 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
     return to_arts(particle_model_->get_d_max());
   }
 
-  std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const {
+  void set_phase_function_norm(Numeric norm) { phase_function_norm_ = norm; }
 
-    scatlib::ParticleModel formatted;
-    if (specs.format == Format::Spectral) {
-        std::cout << "LMAX:: " << specs.l_max << std::endl;
-        formatted = particle_model_->to_spectral(specs.l_max, specs.m_max);
-    } else {
-        particle_model_->to_gridded(to_eigen(specs.lon_inc),
-                                    to_eigen(specs.lat_inc),
-                                    to_eigen(specs.lon_scat),
-                                    to_eigen(specs.lat_scat));
-    }
-    auto new_model = std::make_shared<scatlib::ParticleModel>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
-    auto result = std::make_shared<ScatteringHabit>(name_, pnd_agenda_, pnd_agenda_input_, new_model);
-    return result;
-  }
+  BulkScatteringProperties calculate_bulk_properties(Workspace &ws,
+                                                     const MatrixView pbp_field,
+                                                     const ArrayOfString pbf_names,
+                                                     const Vector temperature,
+                                                     const ArrayOfRetrievalQuantity& jacobian_quantities,
+                                                     bool jacobian_do) const;
 
-  ScatteringProperties calculate_bulk_properties(Workspace &ws,
-                                                 const MatrixView pbp_field,
-                                                 const ArrayOfString pbf_names,
-                                                 const Vector temperature,
-                                                 const ArrayOfRetrievalQuantity& jacobian_quantities,
-                                                 bool jacobian_do) const;
-
+  std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const;
 
   friend std::ostream &operator<<(std::ostream &out, const ScatteringHabit &);
 
@@ -166,6 +176,7 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
   String name_;
   Agenda pnd_agenda_;
   ArrayOfString pnd_agenda_input_;
+  Numeric phase_function_norm_ = 1.0;
   std::shared_ptr<scatlib::ParticleModel> particle_model_;
 };
 

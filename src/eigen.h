@@ -68,6 +68,14 @@ inline EigenConstTensorMap<7> to_eigen(const Tensor7 &tensor) {
                                             tensor.npages(),
                                             tensor.nrows(),
                                             tensor.ncols()};
+  std::cout << "to eigen:" << std::endl;
+  std::cout << dimensions[0] << " // ";
+  std::cout << dimensions[1] << " // ";
+  std::cout << dimensions[2] << " // ";
+  std::cout << dimensions[3] << " // ";
+  std::cout << dimensions[4] << " // ";
+  std::cout << dimensions[5] << " // ";
+  std::cout << dimensions[6] << std::endl;
   return EigenConstTensorMap<7>{tensor.get_c_array(), dimensions};
 }
 
