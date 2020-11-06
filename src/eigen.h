@@ -28,6 +28,7 @@
 #ifndef __ARTS_EIGEN_H__
 #define __ARTS_EIGEN_H__
 
+#include <Eigen/Core>
 #include "Eigen/CXX11/Tensor"
 #include "matpackV.h"
 #include "matpackVII.h"

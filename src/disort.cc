@@ -950,6 +950,8 @@ void run_cdisort(Workspace& ws,
   get_pfct(pfct_bulk_par, pha_bulk_par, ext_bulk_par, abs_bulk_par, cboxlims);
 
   auto coeffs = average_and_invert(bulk_properties.get_legendre_coefficients());
+  Tensor3 pmom(nf_ssd, ds.nlyr, Nlegendre);
+  get_pmom(pmom, pfct_bulk_par, pfct_angs, Nlegendre);
 
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
     sprintf(ds.header, "ARTS Calc f_index = %ld", f_index);
@@ -969,7 +971,7 @@ void run_cdisort(Workspace& ws,
     ds.bc.albedo = surface_scalar_reflectivity[f_index];
 
     std::memcpy(ds.pmom,
-                coeffs(f_index, joker, joker).get_c_array(),
+                pmom(f_index, joker, joker).get_c_array(),
                 sizeof(Numeric) * coeffs.nrows() * coeffs.ncols());
 
     c_disort(&ds, &out);

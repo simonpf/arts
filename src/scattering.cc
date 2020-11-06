@@ -80,7 +80,6 @@ ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_,
       lat_scat(lat_scat_),
       f_grid(f_grid_) {
   lon_inc[0] = M_PI;
-  lat_inc[0] = 0.5 * M_PI;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +130,6 @@ Matrix BulkScatteringProperties::get_absorption_coefficients() const {
 Tensor4 BulkScatteringProperties::get_absorption_vector() const {
   auto n = data_.size();
   auto n_angs = data_[0].get_n_lat_inc();
-  std::cout << "nangs: " << n_angs << " // " << stokes_dim_ << std::endl;
   Tensor4 result(n_freqs_, n, n_angs, stokes_dim_);
   for (Index i = 0; i < n; ++i) {
     EigenTensor<7> absorption = data_[i].get_absorption_vector(stokes_dim_);
@@ -151,7 +149,7 @@ Tensor4 BulkScatteringProperties::get_absorption_vector() const {
     Index n_coeffs = data_[0].get_phase_function_spectral().dimension(4);
     Tensor3 result(n_freqs_, n, n_coeffs);
     for (Index i = 0; i < n; ++i) {
-      EigenTensor<6> phase_matrix =
+      EigenTensor<5> phase_matrix =
           data_[i].get_phase_function_spectral().real();
       result(joker, i, joker) = MatrixView(phase_matrix.data(),
                                            Range(0, n_freqs_, n_coeffs),
@@ -165,7 +163,7 @@ Tensor4 BulkScatteringProperties::get_absorption_vector() const {
     Index n_coeffs = data_[0].get_phase_function_spectral().dimension(4);
     Tensor3 result(n_freqs_, n, n_coeffs);
     for (Index i = 0; i < n; ++i) {
-        EigenTensor<6> phase_matrix = data_[i].get_phase_function_spectral().real();
+        EigenTensor<5> phase_matrix = data_[i].get_phase_function_spectral().real();
         result(joker, i, joker) = MatrixView(phase_matrix.data(),
                                              Range(0, n_freqs_, n_coeffs),
                                              Range(0, n_coeffs, 1));
@@ -184,7 +182,7 @@ Tensor4 BulkScatteringProperties::get_absorption_vector() const {
     Tensor6 result(
         n_freqs_, n_layers, n_lat_inc, n_lat_scat, stokes_dim_, stokes_dim_, 0.0);
     for (Index i = 0; i < n_layers; ++i) {
-      EigenTensor<8> extinction = data_[i].get_extinction_matrix(stokes_dim_);
+      EigenTensor<8> extinction = data_[i].get_scattering_matrix(stokes_dim_);
       for (Index j = 0; j < n_freqs_; ++j) {
         for (Index k = 0; k < n_lat_inc; ++k) {
           for (Index l = 0; l < n_lat_scat; ++l) {
@@ -198,8 +196,6 @@ Tensor4 BulkScatteringProperties::get_absorption_vector() const {
         }
       }
     }
-    std::cout << "scat matrix raw:: " << std::endl;
-    std::cout << result << std::endl;
     return result;
   }
 
@@ -208,7 +204,7 @@ Tensor4 BulkScatteringProperties::get_absorption_vector() const {
     Index n_spectral_coeffs_ = data_[0].get_phase_function().dimension(5);
     Tensor3 result(n_freqs_, n, n_spectral_coeffs_);
     for (Index i = 0; i < n; ++i) {
-      EigenTensor<7> phase_matrix = data_[i].get_phase_function();
+      EigenTensor<6> phase_matrix = data_[i].get_phase_function();
       result(joker, i, joker) =
           MatrixView(phase_matrix.data(),
                      Range(0, n_freqs_, n_spectral_coeffs_),

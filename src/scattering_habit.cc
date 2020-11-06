@@ -169,9 +169,6 @@ ArrayOfString ScatteringHabit::get_dpnd_data_dx_names(
 
 Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
                                          ArrayOfString pbf_names) const {
-    std::cout << pbf_names << std::endl;
-    std::cout << pbf_names.size() << std::endl;
-    std::cout << pbp_field.nrows() << " / " << pbp_field.ncols() << std::endl;
     assert(pbp_field.nrows() == pbf_names.size());
 
   Index n_inputs = pnd_agenda_input_.size();
@@ -216,7 +213,10 @@ std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(
                                          to_eigen(specs.lat_inc),
                                          to_eigen(specs.lon_scat),
                                          to_eigen(specs.lat_scat));
+        auto sd = formatted.get_single_scattering_data(0);
+
     }
+
     auto new_model = std::make_shared<scatlib::ParticleModel>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
     auto result = std::make_shared<ScatteringHabit>(name_, pnd_agenda_, pnd_agenda_input_, new_model);
     result->set_phase_function_norm(specs.phase_function_norm);
