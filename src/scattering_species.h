@@ -44,9 +44,6 @@
 
 class ScatteringSpecies {
  public:
-  Tensor5 get_phase_matrix(Workspace& ws) {
-    return impl_->get_phase_matrix(ws);
-  }
 
   ScatteringSpecies() {}
 

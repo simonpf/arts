@@ -16658,6 +16658,32 @@ void define_md_data_raw() {
           )));
 
   md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesCalcBulkAbsorptionCoeff"),
+      DESCRIPTION(
+          "Calculate the bulk absorption coefficient of the scattering species. "
+          "\n"
+          "The returned tensor has dimensions\n"
+          "[lon_grid, lat_grid, p_grid, f_grid, aa_grid, za_grid] and contains the\n"
+          "bulk absorption coefficient for each grid point, frequency and azimuth\n"
+          "and zenith incoming angles.\n"
+          ),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("bulk_absorption_coeff"),
+      GOUT_TYPE("Tensor6"),
+      GOUT_DESC("Rank-6 tensor containing the bulk-absorption coefficients."),
+      IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
+         "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
+      GIN(),
+      GIN_TYPE(),
+      GIN_DEFAULT(),
+      GIN_DESC(),
+      SETMETHOD(false),
+      AGENDAMETHOD(false),
+      USES_TEMPLATES(false),
+      PASSWORKSPACE(true)));
+
+  md_data_raw.push_back(create_mdrecord(
       NAME("particle_fieldCleanup"),
       DESCRIPTION(
           "Removes unrealistically small or erroneous data from particle fields.\n"

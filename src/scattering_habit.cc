@@ -20,7 +20,7 @@
   ===========================================================================*/
 
 /*!
-  \file   scattering_habit.cxx
+  \file   scattering_habit.cc
   \author Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
   \date   2020-09-15
 
@@ -171,11 +171,11 @@ Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
     assert(pbp_field.nrows() == pbf_names.size());
 
   Index n_inputs = pnd_agenda_input_.size();
-  ArrayOfIndex column_indices(n_inputs);
+  ArrayOfIndex row_indices(n_inputs);
 
   for (Index i = 0; i < n_inputs; ++i) {
-    column_indices[i] = find_first(pbf_names, pnd_agenda_input_[i]);
-    if (column_indices[i] < 0) {
+    row_indices[i] = find_first(pbf_names, pnd_agenda_input_[i]);
+    if (row_indices[i] < 0) {
       ostringstream os;
       os << "Particle habit requires input " << pnd_agenda_input_[i]
          << "\",\nbut this quantity "
@@ -187,7 +187,7 @@ Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
 
   Matrix agenda_input(pbp_field.ncols(), n_inputs);
   for (size_t i = 0; i < n_inputs; ++i) {
-      agenda_input(joker, i) = pbp_field(column_indices[i], joker);
+      agenda_input(joker, i) = pbp_field(row_indices[i], joker);
   }
 
   return agenda_input;
@@ -233,9 +233,9 @@ std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(
 
 BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
     Workspace &ws,
-    const MatrixView pbp_field,
-    const ArrayOfString pbf_names,
-    const Vector temperature,
+    ConstMatrixView pbp_field,
+    const ArrayOfString &pbf_names,
+    ConstVectorView temperature,
     const ArrayOfRetrievalQuantity &jacobian_quantities,
     bool jacobian_do) const {
   Matrix pnd_data;
@@ -265,6 +265,7 @@ BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
 
   return BulkScatteringProperties(bulk_properties);
 }
+
 
 std::ostream & operator<<(std::ostream &output, const ScatteringHabit &habit) {
     output << "Scattering habit: " << habit.name_ << std::endl;

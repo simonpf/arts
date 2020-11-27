@@ -3886,6 +3886,19 @@ void Workspace::define_wsv_data() {
       GROUP("Vector")));
 
   wsv_data.push_back(WsvRecord(
+                         NAME("scattering_bulk_properties"),
+                         DESCRIPTION(
+                             "Array of single scattering data.\n"
+                             "\n"
+                             "As *scat_data_raw*, but with frequency grids and dimensions reduced\n"
+                             "to the RT's *f_grid* or a single frequency entry. Also, temperature\n"
+                             "grid or dimensions can be reduced to a single entry, meaning no\n"
+                             "temperature interpolation is done for the respective data.\n"
+                             "\n"
+                             "Standard approach to derive scat_data is to use *scat_dataCalc* to\n"
+                             "derive it from *scat_data_raw*."),
+                         GROUP("ArrayOfArrayOfSingleScatteringData")));
+  wsv_data.push_back(WsvRecord(
       NAME("scat_data"),
       DESCRIPTION(
           "Array of single scattering data.\n"

@@ -902,7 +902,7 @@ void run_cdisort(Workspace& ws,
                                                                             {},
                                                                             false);
   auto extinction = bulk_properties.get_extinction_coefficients();
-  auto absorption = bulk_properties.get_absorption_coefficients();
+  auto absorption = bulk_properties.get_absorption_coeff()(joker, joker, 0, 0);
 
 
   xml_write_to_file("bulk_absorption_stokes_1.xml",
@@ -916,6 +916,13 @@ void run_cdisort(Workspace& ws,
                     FileType::FILE_TYPE_BINARY,
                     0,
                     verbosity);
+
+  std::cout << "ABS :: " << std::endl;
+  std::cout << extinction << std::endl;
+
+  std::cout << "ABS REF :: " << std::endl;
+  std::cout << ext_bulk_par << std::endl;
+
 
 
 
@@ -965,7 +972,7 @@ void run_cdisort(Workspace& ws,
   get_pmom(pmom, pfct_bulk_par, pfct_angs, Nlegendre);
 
   xml_write_to_file("phase_matrix_moments.xml",
-                    pmom,
+                    bulk_properties.get_legendre_coefficients(),
                     FileType::FILE_TYPE_BINARY,
                     0,
                     verbosity);

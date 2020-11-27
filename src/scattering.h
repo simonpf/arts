@@ -35,12 +35,14 @@
 #ifndef __ARTS_SCATTERING__
 #define __ARTS_SCATTERING__
 
-using Scattering::SingleScatteringData;
-using Scattering::Particle;
-
 enum class Format {Gridded, Spectral};
 enum class ReferenceFrame {ScatteringPlane, Lab};
 
+/** Specification of required scattering properties.
+ *
+ * This struct holds requirements describing the scattering
+ * data required by different scattering solvers.
+ */
 struct ScatteringPropertiesSpec {
     ScatteringPropertiesSpec(const Vector &f_grid,
                              ReferenceFrame frame_,
@@ -101,16 +103,24 @@ class BulkScatteringProperties {
    * for the n_f frequencies and n_p points in the atmosphere.
    */
   Matrix get_extinction_coefficients() const;
-  Tensor5 get_extinction_matrix() const;
+  Tensor6 get_extinction_matrix() const;
 
-  /** Extracts absorption coefficients from the absorption matrix.
+  /** Extracts absorption coefficients from bulk properties.
    *
-   * @return (n_f x n_p) matrix containing the absorption coefficients
-   * for the n_f frequencies and n_p points in the atmosphere.
+   * @return Tensor5 with dimensions [n_layers, n_freqs, n_lon_inc]
+   * containing the absorption coefficient for all layers in the atmosphere,
+   * frequencies in f_grid, and incoming azimuth and zenith angles.
    */
-  Matrix get_absorption_coefficients() const;
+  Tensor4 get_absorption_coeff() const;
 
-  Tensor4 get_absorption_vector() const;
+  /** Extracts absorption vector from bulk properties.
+   *
+   * @return Tensor5 with dimensions [n_layers, n_freqs, n_lon_inc, stokes_dim]
+   * containing the absorption vector for all layers in the atmosphere,
+   * frequencies in f_grid, incoming azimuth and zenith angles and the stokes
+   * components.
+   */
+  Tensor5 get_absorption_vector() const;
 
   /** Get spectral coefficients.
    * @return Tensor3 containing the spectral coefficients along
@@ -148,15 +158,14 @@ public:
     virtual ~ScatteringSpeciesImpl() {};
     ScatteringSpeciesImpl() {};
     ScatteringSpeciesImpl(const ScatteringSpeciesImpl &) = default;
-    virtual Tensor5 get_phase_matrix(Workspace &ws) = 0;
 
 
     virtual std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const = 0;
     virtual BulkScatteringProperties calculate_bulk_properties(Workspace &ws,
-                                                               const MatrixView pbp_field,
-                                                               const ArrayOfString pbf_names,
-                                                               const Vector temperature,
-                                                               const ArrayOfRetrievalQuantity& jacobian_quantities,
+                                                               ConstMatrixView pbp_field,
+                                                               const ArrayOfString &pbf_names,
+                                                               ConstVectorView temperature,
+                                                               const ArrayOfRetrievalQuantity &jacobian_quantities,
                                                                bool jacobian_do) const = 0;
 
 };

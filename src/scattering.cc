@@ -27,6 +27,9 @@
   \brief  Implementation of scattering.h
 */
 #include "scattering.h"
+#include "scattering/eigen.h"
+
+using scattering::eigen::tensor_index;
 
 ////////////////////////////////////////////////////////////////////////////////
 // ScatteringPropertiesSpec
@@ -97,49 +100,75 @@ Matrix BulkScatteringProperties::get_extinction_coefficients() const {
     return result;
 }
 
-Tensor5 BulkScatteringProperties::get_extinction_matrix() const {
-  auto n = data_.size();
-  auto n_angs = data_[0].get_n_lat_inc();
-  Tensor5 result(n_freqs_, n, n_angs, stokes_dim_, stokes_dim_, 0.0);
-  for (Index i = 0; i < n; ++i) {
+Tensor6 BulkScatteringProperties::get_extinction_matrix() const {
+  auto n_layers = data_.size();
+  auto n_freqs = data_[0].get_n_freqs();
+  auto n_lon_inc = data_[0].get_n_lon_inc();
+  auto n_lat_inc = data_[0].get_n_lat_inc();
+  Tensor6 result(n_freqs,
+                 n_layers,
+                 n_lon_inc,
+                 n_lat_inc,
+                 stokes_dim_,
+                 stokes_dim_,
+                 0.0);
+  for (Index i = 0; i < n_layers; ++i) {
     EigenTensor<8> extinction = data_[i].get_extinction_matrix(stokes_dim_);
-    for (Index j = 0; j < n_freqs_; ++j) {
-      for (Index k = 0; k < n_angs; ++k) {
-        for (Index l = 0; l < stokes_dim_; ++l) {
-          for (Index m = 0; m < stokes_dim_; ++m) {
-            result(j, i, k, l, m) = extinction.coeffRef(j, 0, 0, k, 0, 0, l, m);
-          }
+    for (Index i = 0; i < n_layers; ++i) {
+        // This is a rank-8 tensor, but degenerate along the axis corresponding
+        // to temperature as well as the scattering angles, so we can copy it
+        // directly into the output.
+        auto extinction = data_[i].get_extinction_matrix(stokes_dim_);
+        for (Index j = 0; j < n_freqs; ++j) {
+            auto extinction_f = tensor_index<1>(extinction, {j});
+            auto input_start = extinction_f.data();
+            auto input_end = extinction_f.data() + extinction_f.size();
+            auto result_view = result(j, i, joker, joker, joker, joker);
+            std::copy(input_start, input_end, result_view.get_c_array());
         }
-      }
     }
   }
   return result;
 }
 
-Matrix BulkScatteringProperties::get_absorption_coefficients() const {
-    auto n = data_.size();
-    Matrix result(n_freqs_, n);
-    for (Index i = 0; i < n; ++i) {
+Tensor4 BulkScatteringProperties::get_absorption_coeff() const {
+    auto n_layers = data_.size();
+    auto n_freqs = data_[0].get_n_freqs();
+    auto n_lon_inc = data_[0].get_n_lon_inc();
+    auto n_lat_inc = data_[0].get_n_lat_inc();
+    Tensor4 result(n_freqs, n_layers, n_lon_inc, n_lat_inc);
+    for (Index i = 0; i < n_layers; ++i) {
+        // This is a rank-5 tensor, but degenerate along the axis corresponding
+        // to temperature, so we can copy it directly into the output.
         auto absorption = data_[i].get_absorption_coeff();
-        result(joker, i) =
-            VectorView(absorption.data(), Range(0, absorption.size()));
+        for (Index j = 0; j < n_freqs; ++j) {
+            auto absorption_f = tensor_index<1>(absorption, {j});
+            auto input_start = absorption_f.data();
+            auto input_end = absorption_f.data() + absorption_f.size();
+            auto result_view = result(j, i, joker, joker);
+            std::copy(input_start, input_end, result_view.get_c_array());
+        }
     }
     return result;
 }
 
-Tensor4 BulkScatteringProperties::get_absorption_vector() const {
-  auto n = data_.size();
-  auto n_angs = data_[0].get_n_lat_inc();
-  Tensor4 result(n_freqs_, n, n_angs, stokes_dim_);
-  for (Index i = 0; i < n; ++i) {
-    EigenTensor<7> absorption = data_[i].get_absorption_vector(stokes_dim_);
-    for (Index j = 0; j < n_freqs_; ++j) {
-      for (Index k = 0; k < n_angs; ++k) {
-        for (Index l = 0; l < stokes_dim_; ++l) {
-          result(j, i, k, l) = absorption.coeffRef(j, 0, 0, k, 0, 0, l);
-        }
+Tensor5 BulkScatteringProperties::get_absorption_vector() const {
+  auto n_layers = data_.size();
+  auto n_freqs = data_[0].get_n_freqs();
+  auto n_lon_inc = data_[0].get_n_lon_inc();
+  auto n_lat_inc = data_[0].get_n_lat_inc();
+  Tensor5 result(n_freqs, n_layers, n_lon_inc, n_lat_inc, stokes_dim_);
+  for (Index i = 0; i < n_layers; ++i) {
+      // This is a rank-5 tensor, but degenerate along the axis corresponding
+      // to temperature, so we can copy it directly into the output.
+      auto absorption = data_[i].get_absorption_vector(stokes_dim_);
+      for (Index j = 0; j < n_freqs; ++j) {
+          auto absorption_f = tensor_index<1>(absorption, {j});
+          auto input_start = absorption_f.data();
+          auto input_end = absorption_f.data() + absorption_f.size();
+              auto result_view = result(j, i, joker, joker, joker);
+          std::copy(input_start, input_end, result_view.get_c_array());
       }
-    }
   }
   return result;
 }

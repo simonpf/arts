@@ -251,6 +251,7 @@ add_library (artscore STATIC
   m_retrieval.cc
   m_scattering_species.cc
   m_scattering_habit.cc
+  m_scattering.cc
   m_sensor.cc
   m_surface.cc
   m_telsem.cc

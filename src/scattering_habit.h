@@ -24,12 +24,11 @@
   \author Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
   \date   2020-09-15
 
-  \brief  Representation of scattering particle species with given
-          functional size distribution.
+  \brief Representation of habits of scattering particles with associated PSD.
 
    This file contains the definition of the ScatteringHabit class which
-   represents a scattering species which is described by an explicit scattering
-   model consisting of scatter properties for different particle sizes and
+   represents a scattering species described by an explicit scattering model
+   consisting of scatter properties for different particle sizes together with
    a particle size distribution.
 */
 #include <iostream>
@@ -113,22 +112,31 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
 
  public:
   ScatteringHabit();
-  /** Create ScatteringHabit
-   *
+  /** Create ScatteringHabit.
    * @param name The name of the scattering species.
-   * @param arts_scat_data The ensemble scattering data describing the particles
-   * that make up the habit.
-   * @param The particle meta data corresponding to the particles in arts_scat_data
-   * @
-   *
-
+   * @param scat_data The ensemble scattering data describing the particles
+   * which make up the habit.
+   * @param meta_data The particle meta data corresponding to the particles in
+   * scat_data
+   * @pnd_agenda The agenda to use to calculate the number densities of each
+   * particle.
+   * @pnd_agenda_input The names of the properties from pbp_field to use as input
+   * for the particle size distributions.
    */
-
   ScatteringHabit(const String &name,
-                  const ArrayOfSingleScatteringData &arts_scat_data,
+                  const ArrayOfSingleScatteringData &scat_data,
                   const ArrayOfScatteringMetaData &meta_data,
                   const Agenda &pnd_agenda,
                   const ArrayOfString &pnd_agenda_input);
+  /** Create ScatteringHabit.
+   * @param name The name of the scattering species.
+   * @pnd_agenda The agenda to use to calculate the number densities of each
+   * particle.
+   * @pnd_agenda_input The names of the properties from pbp_field to use as input
+   * for the particle size distributions.
+   * @particle_model Particle model object containing the scattering data
+   * describing the particles in the habit.
+   */
   ScatteringHabit(const String name,
                   const Agenda &pnd_agenda,
                   ArrayOfString pnd_agenda_input,
@@ -140,16 +148,17 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
 
   ~ScatteringHabit();
 
-  Tensor5 get_phase_matrix(Workspace &ws) { return Tensor5(); }
-
+  /// The masses of the particles in the habit.
   Vector get_particle_mass() const {
     return to_arts(particle_model_->get_mass());
   }
 
+  /// The volume equivalent diameters of the particles in the habit.
   Vector get_particle_d_eq() const {
     return to_arts(particle_model_->get_d_eq());
   }
 
+  /// The maximum diameters of the particles in the habit.
   Vector get_particle_d_max() const {
     return to_arts(particle_model_->get_d_max());
   }
@@ -160,12 +169,22 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
 
   void set_phase_function_norm(Numeric norm) { phase_function_norm_ = norm; }
 
+  /** Calculate bulk scattering properties for 1D atmosphere.
+   *
+   * @param pbp_field Matrix view containing the particle bulk properties for
+   * all layers in the atmosphere.
+   * @param pbp_names The names corresponding to the rows in pbp_field.
+   * @param temperature Vector containing the temperatures in the atmosphere.
+   * @param jacobian_quantities The quantities for which to compute the jacobian.
+   * @param jacobian_do Whether or not to calculate the Jacobian.
+   */
   BulkScatteringProperties calculate_bulk_properties(Workspace &ws,
-                                                     const MatrixView pbp_field,
-                                                     const ArrayOfString pbf_names,
-                                                     const Vector temperature,
-                                                     const ArrayOfRetrievalQuantity& jacobian_quantities,
+                                                     ConstMatrixView pbp_field,
+                                                     const ArrayOfString &pbp_names,
+                                                     ConstVectorView temperature,
+                                                     const ArrayOfRetrievalQuantity &jacobian_quantities,
                                                      bool jacobian_do) const;
+
 
   std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const;
 

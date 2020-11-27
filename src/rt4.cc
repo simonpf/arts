@@ -54,8 +54,14 @@ extern const Numeric SPEED_OF_LIGHT;
 extern const Numeric COSMIC_BG_TEMP;
 
 
-Tensor5 to_rt4_format(const Tensor4 &absorption_vector) {
+/** Transform absorption-vector tensor to RT4 format.
+ *
+ * This sorts
+ *
+ */
 
+
+Tensor5 to_rt4_format(const Tensor5 &absorption_vector) {
     Index n_freqs = absorption_vector.nbooks();
     Index n_layers = absorption_vector.npages();
     Index n_lat_inc = absorption_vector.nrows();
@@ -66,13 +72,13 @@ Tensor5 to_rt4_format(const Tensor4 &absorption_vector) {
         for (Index freq_index = 0; freq_index < n_freqs; ++freq_index) {
             for (Index  mu_index = 0; mu_index < n_mu; ++mu_index) {
                 absorption_averaged(freq_index, layer_index, 0, mu_index, joker)
-                    = absorption_vector(freq_index, layer_index, n_mu - 1 - mu_index, joker);
+                    = absorption_vector(freq_index, layer_index, 0, n_mu - 1 - mu_index, joker);
                 absorption_averaged(freq_index, layer_index, 0, mu_index, joker)
-                    += absorption_vector(freq_index, layer_index + 1, n_mu - 1 - mu_index, joker);
+                    += absorption_vector(freq_index, layer_index + 1, 0, n_mu - 1 - mu_index, joker);
                 absorption_averaged(freq_index, layer_index, 1, mu_index, joker)
-                    = absorption_vector(freq_index, layer_index, n_mu + mu_index, joker);
+                    = absorption_vector(freq_index, layer_index, 0, n_mu + mu_index, joker);
                 absorption_averaged(freq_index, layer_index, 1, mu_index, joker)
-                    += absorption_vector(freq_index, layer_index + 1, n_mu + mu_index, joker);
+                    += absorption_vector(freq_index, layer_index + 1, 0, n_mu + mu_index, joker);
             }
         }
     }
@@ -80,7 +86,7 @@ Tensor5 to_rt4_format(const Tensor4 &absorption_vector) {
     return absorption_averaged;
 }
 
-Tensor6 to_rt4_format(const Tensor5 &extinction_matrix) {
+Tensor6 to_rt4_format(const Tensor6 &extinction_matrix) {
 
     Index n_freqs = extinction_matrix.nshelves();
     Index n_layers = extinction_matrix.nbooks();
@@ -92,13 +98,13 @@ Tensor6 to_rt4_format(const Tensor5 &extinction_matrix) {
         for (Index freq_index = 0; freq_index < n_freqs; ++freq_index) {
             for (Index  mu_index = 0; mu_index < n_mu; ++mu_index) {
                 extinction_averaged(freq_index, layer_index, 0, mu_index, joker, joker) +=
-                    extinction_matrix(freq_index, layer_index, n_mu - 1 - mu_index, joker, joker);
+                    extinction_matrix(freq_index, layer_index, 0, n_mu - 1 - mu_index, joker, joker);
                 extinction_averaged(freq_index, layer_index, 0, mu_index, joker, joker) +=
-                    extinction_matrix(freq_index, layer_index + 1, n_mu - 1 - mu_index, joker, joker);
+                    extinction_matrix(freq_index, layer_index + 1, 0, n_mu - 1 - mu_index, joker, joker);
                 extinction_averaged(freq_index, layer_index, 1, mu_index, joker, joker) +=
-                    extinction_matrix(freq_index, layer_index, n_mu + mu_index, joker, joker);
+                    extinction_matrix(freq_index, layer_index, 0, n_mu + mu_index, joker, joker);
                 extinction_averaged(freq_index, layer_index, 1, mu_index, joker, joker) +=
-                    extinction_matrix(freq_index, layer_index + 1, n_mu + mu_index, joker, joker);
+                    extinction_matrix(freq_index, layer_index + 1, 0, n_mu + mu_index, joker, joker);
             }
         }
     }
