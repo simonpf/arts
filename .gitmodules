@@ -1,0 +1,6 @@
+[submodule "3rdparty/scattering"]
+	path = 3rdparty/scattering
+	url = https://github.com/simonpf/scattering
+[submodule "3rdparty/netcdfhpp"]
+	path = 3rdparty/netcdfhpp
+	url = https://github.com/simonpf/netcdfhpp
