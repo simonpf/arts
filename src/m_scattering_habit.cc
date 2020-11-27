@@ -41,6 +41,7 @@ void scattering_habitGetParticleSizes(
     const Verbosity&) {
 
   Vector mass = scattering_habit.get_particle_mass();
+  std::cout << scattering_habit << std::endl;
 
   if (x_unit == "dveq") {
       scat_species_x = scattering_habit.get_particle_d_eq();

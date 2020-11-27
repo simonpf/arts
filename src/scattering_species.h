@@ -35,7 +35,7 @@
 #include "array.h"
 #include "eigen.h"
 #include "optproperties.h"
-#include "scatlib/particle_model.h"
+#include "scattering/particle_habit.h"
 #include "scattering.h"
 #include "scattering_habit.h"
 

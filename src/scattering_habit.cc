@@ -55,21 +55,21 @@ EigenTensor<7> extract_forward_scattering_coeff(
   return backward_scattering_coeff.reshape(dimensions);
 }
 
-EigenTensor<7> arts_to_scatlib(const Tensor7 &tensor) {
+EigenTensor<7> arts_to_scattering(const Tensor7 &tensor) {
     EigenTensor<7> tensor_eigen = to_eigen(tensor);
     std::array<Eigen::Index, 7> shuffle_dimensions = {0, 1, 5, 4, 3, 2, 6};
     EigenTensor<7> result = tensor_eigen.shuffle(shuffle_dimensions);
     return tensor_eigen.shuffle(shuffle_dimensions);
 }
 
-EigenTensor<7> arts_to_scatlib(const Tensor5 &tensor) {
+EigenTensor<7> arts_to_scattering(const Tensor5 &tensor) {
   EigenTensor<5> tensor_eigen = to_eigen(tensor);
-  auto result = scatlib::eigen::unsqueeze<4, 5>(tensor_eigen);
+  auto result = scattering::eigen::unsqueeze<4, 5>(tensor_eigen);
   std::array<Eigen::Index, 7> shuffle_dimensions = {0, 1, 3, 2, 4, 5, 6};
   return result.shuffle(shuffle_dimensions);
 }
 
-scatlib::SingleScatteringData artsscat_to_scatlib(
+scattering::SingleScatteringData artsscat_to_scattering(
     const SingleScatteringData &arts_data) {
   EigenVector f_grid = to_eigen(arts_data.f_grid);
   EigenVector t_grid = to_eigen(arts_data.T_grid);
@@ -81,9 +81,9 @@ scatlib::SingleScatteringData artsscat_to_scatlib(
   }
   EigenVector lat_scat = to_eigen(arts_data.za_grid);
   lat_scat *= (M_PI / 180.0);
-  auto phase_matrix = arts_to_scatlib(arts_data.pha_mat_data);
-  auto extinction_matrix = arts_to_scatlib(arts_data.ext_mat_data);
-  auto absorption_vector = arts_to_scatlib(arts_data.abs_vec_data);
+  auto phase_matrix = arts_to_scattering(arts_data.pha_mat_data);
+  auto extinction_matrix = arts_to_scattering(arts_data.ext_mat_data);
+  auto absorption_vector = arts_to_scattering(arts_data.abs_vec_data);
   auto backward_scattering_coeff =
       extract_backward_scattering_coeff(phase_matrix);
   auto forward_scattering_coeff =
@@ -96,7 +96,7 @@ scatlib::SingleScatteringData artsscat_to_scatlib(
   assert(phase_matrix.dimension(4) == lon_scat.size());
   assert(phase_matrix.dimension(5) == lat_scat.size());
 
-  return scatlib::SingleScatteringData(f_grid,
+  return scattering::SingleScatteringData(f_grid,
                                        t_grid,
                                        angle_grid_inc,
                                        angle_grid_inc,
@@ -127,26 +127,25 @@ ScatteringHabit::ScatteringHabit(
 {
   Index n = arts_scat_data.size();
   Index m = meta_data.size();
-  std::vector<scatlib::SingleScatteringData> model_data;
+  std::vector<scattering::Particle> particles{};
   EigenVector d_eq(n), d_max(n), mass(n);
 
   for (size_t i = 0; i < n; ++i) {
-    auto scattering_data = detail::artsscat_to_scatlib(arts_scat_data[i]);
-    model_data.push_back(scattering_data.regrid());
-
+    auto scattering_data = detail::artsscat_to_scattering(arts_scat_data[i]);
     auto meta = meta_data[i];
-    d_eq[i] = meta.diameter_volume_equ;
-    d_max[i] = meta.diameter_max;
-    mass[i] = meta.mass;
+    particles.emplace_back(meta.mass,
+                           meta.diameter_volume_equ,
+                           meta.diameter_max,
+                           scattering_data);
   }
-  particle_model_ = std::make_shared<scatlib::ParticleModel>(d_eq, d_max, mass, model_data);
+  particle_model_ = std::make_shared<scattering::ParticleHabit>(particles);
 }
 
 ScatteringHabit::ScatteringHabit(
     const String name,
     const Agenda &pnd_agenda,
     ArrayOfString pnd_agenda_input,
-    std::shared_ptr<scatlib::ParticleModel> particle_model)
+    std::shared_ptr<scattering::ParticleHabit> particle_model)
     : name_(name),
       pnd_agenda_(pnd_agenda),
       pnd_agenda_input_(pnd_agenda_input),
@@ -196,16 +195,26 @@ Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
 
 std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(ScatteringPropertiesSpec specs) const {
 
-    scatlib::ParticleModel formatted = particle_model_->set_stokes_dim(specs.n_stokes);
+    scattering::ParticleHabit formatted = particle_model_->set_stokes_dim(specs.n_stokes);
 
     if (specs.frame == ReferenceFrame::Lab) {
-        formatted = formatted.to_lab_frame(specs.n_angs_frame_conversion,
-                                           specs.n_angs_frame_conversion,
+        Index n = specs.lat_scat.nelem();
+        EigenVector lon_scat(n);
+        Numeric dx = 2.0 * M_PI / static_cast<Numeric>(n - 1);
+        lon_scat[0] = 0.0;
+        for (Index i = 1; i < n; ++i) {
+            lon_scat[i] = lon_scat[i - 1] + dx;
+        }
+        formatted = formatted.to_lab_frame(to_eigen(specs.lat_inc),
+                                           lon_scat,
+                                           to_eigen(specs.lat_scat),
                                            specs.n_stokes);
     }
 
     if (specs.format == Format::Spectral) {
-        formatted = formatted.to_spectral(specs.l_max, specs.m_max);
+        // Data must be regridded to ensure conformity with grids expected
+        // by SHT transform.
+        formatted = formatted.regrid().to_spectral(specs.l_max, specs.m_max);
     } else {
         formatted = formatted.downsample_scattering_angles(to_eigen(specs.lon_scat),
                                                            to_eigen(specs.lat_scat));
@@ -213,11 +222,10 @@ std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(
                                          to_eigen(specs.lat_inc),
                                          to_eigen(specs.lon_scat),
                                          to_eigen(specs.lat_scat));
-        auto sd = formatted.get_single_scattering_data(0);
 
     }
 
-    auto new_model = std::make_shared<scatlib::ParticleModel>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
+    auto new_model = std::make_shared<scattering::ParticleHabit>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
     auto result = std::make_shared<ScatteringHabit>(name_, pnd_agenda_, pnd_agenda_input_, new_model);
     result->set_phase_function_norm(specs.phase_function_norm);
     return result;
@@ -248,7 +256,7 @@ BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
                     pnd_agenda_);
 
   auto n_levels = pnd_data.nrows();
-  Array<scatlib::SingleScatteringData> bulk_properties(n_levels);
+  Array<scattering::SingleScatteringData> bulk_properties(n_levels);
   for (Index i = 0; i < n_levels; ++i) {
       EigenVector number_densities = to_eigen(pnd_data(i, joker));
     bulk_properties[i] = particle_model_->calculate_bulk_properties(
@@ -259,5 +267,9 @@ BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
 }
 
 std::ostream & operator<<(std::ostream &output, const ScatteringHabit &habit) {
-    std::cout << "Scattering Habit: NICE" << std::endl;
+    output << "Scattering habit: " << habit.name_ << std::endl;
+    output << "\t Particle d_eq: " << habit.get_particle_d_eq() << std::endl;
+    output << "\t Particle d_max: " << habit.get_particle_d_max() << std::endl;
+    output << std::endl;
+    return output;
 }

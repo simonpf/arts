@@ -66,14 +66,17 @@ Tensor5 to_rt4_format(const Tensor4 &absorption_vector) {
         for (Index freq_index = 0; freq_index < n_freqs; ++freq_index) {
             for (Index  mu_index = 0; mu_index < n_mu; ++mu_index) {
                 absorption_averaged(freq_index, layer_index, 0, mu_index, joker)
-                    = 0.5 * absorption_vector(freq_index, layer_index, n_mu - 1 - mu_index, joker)
-                    + 0.5 * absorption_vector(freq_index, layer_index + 1, n_mu - 1 - mu_index, joker);
+                    = absorption_vector(freq_index, layer_index, n_mu - 1 - mu_index, joker);
+                absorption_averaged(freq_index, layer_index, 0, mu_index, joker)
+                    += absorption_vector(freq_index, layer_index + 1, n_mu - 1 - mu_index, joker);
                 absorption_averaged(freq_index, layer_index, 1, mu_index, joker)
-                    = 0.5 * absorption_vector(freq_index, layer_index, n_mu + mu_index, joker)
-                    + 0.5 * absorption_vector(freq_index, layer_index + 1, n_mu + mu_index, joker);
+                    = absorption_vector(freq_index, layer_index, n_mu + mu_index, joker);
+                absorption_averaged(freq_index, layer_index, 1, mu_index, joker)
+                    += absorption_vector(freq_index, layer_index + 1, n_mu + mu_index, joker);
             }
         }
     }
+    absorption_averaged *= 0.5;
     return absorption_averaged;
 }
 
@@ -630,6 +633,7 @@ void run_rt4(Workspace& ws,
                                                                                 t,
                                                                                 {},
                                                                                 false);
+      auto av = bulk_properties.get_absorption_vector();
       absorption_vector = to_rt4_format(bulk_properties.get_absorption_vector());
       extinction_matrix = to_rt4_format(bulk_properties.get_extinction_matrix());
       scattering_matrix = to_rt4_format(bulk_properties.get_scattering_matrix(),
@@ -698,12 +702,22 @@ void run_rt4(Workspace& ws,
                         pfct_threshold,
                         auto_inc_nstreams,
                         verbosity);
-        std::cout << "EMIS _REF: " << emis_vector << std::endl;
-        std::cout << "EMIS: " << absorption_vector << std::endl;
 
-        std::cout << "EXT _REF: " << extinction_matrix << std::endl;
-        std::cout << "EXT: " << extinct_matrix << std::endl;
-
+        xml_write_to_file("extinction_matrices_stokes_2.xml",
+                          extinct_matrix,
+                          FileType::FILE_TYPE_BINARY,
+                          0,
+                          verbosity);
+        xml_write_to_file("absorption_vector_stokes_2.xml",
+                          absorption_vector,
+                          FileType::FILE_TYPE_BINARY,
+                          0,
+                          verbosity);
+        xml_write_to_file("scattering_matrices_stokes_2.xml",
+                          scatter_matrix,
+                          FileType::FILE_TYPE_BINARY,
+                          0,
+                          verbosity);
       } else {
         pfct_failed = 1;
       }

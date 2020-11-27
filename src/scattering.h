@@ -1,4 +1,4 @@
-/* Copyright (C) 2020 Simon Pfreundschuh <simon.pfreundschuh@chalmer.se>
+/* Copyright (C) 2020 Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -26,7 +26,7 @@
 
   \brief  Defines the abstract interface for scattering species.
 */
-#include "scatlib/single_scattering_data.h"
+#include "scattering/single_scattering_data.h"
 
 #include "jacobian.h"
 #include "matpackI.h"
@@ -34,6 +34,9 @@
 
 #ifndef __ARTS_SCATTERING__
 #define __ARTS_SCATTERING__
+
+using Scattering::SingleScatteringData;
+using Scattering::Particle;
 
 enum class Format {Gridded, Spectral};
 enum class ReferenceFrame {ScatteringPlane, Lab};
@@ -83,10 +86,10 @@ class BulkScatteringProperties {
  public:
   /** Create BulkScatteringProperties
      *
-     * @param Array of scatlib::SingleScattering ojects describing the scattering properties
+     * @param Array of scattering::SingleScatteringData ojects describing the scatlib properties
      * at each atmospheric position.
      */
-  BulkScatteringProperties(Array<scatlib::SingleScatteringData> data)
+  BulkScatteringProperties(Array<scattering::SingleScatteringData> data)
       : data_(data),
         n_freqs_(data[0].get_f_grid().size()),
         stokes_dim_(data[0].get_stokes_dim())
@@ -135,7 +138,7 @@ class BulkScatteringProperties {
   }
 
  private:
-  Array<scatlib::SingleScatteringData> data_;
+  Array<scattering::SingleScatteringData> data_;
   Index n_freqs_;
   Index stokes_dim_;
 };
@@ -147,13 +150,15 @@ public:
     ScatteringSpeciesImpl(const ScatteringSpeciesImpl &) = default;
     virtual Tensor5 get_phase_matrix(Workspace &ws) = 0;
 
+
     virtual std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const = 0;
     virtual BulkScatteringProperties calculate_bulk_properties(Workspace &ws,
-                                                                const MatrixView pbp_field,
-                                                                const ArrayOfString pbf_names,
-                                                                const Vector temperature,
-                                                                const ArrayOfRetrievalQuantity& jacobian_quantities,
-                                                                bool jacobian_do) const = 0;
+                                                               const MatrixView pbp_field,
+                                                               const ArrayOfString pbf_names,
+                                                               const Vector temperature,
+                                                               const ArrayOfRetrievalQuantity& jacobian_quantities,
+                                                               bool jacobian_do) const = 0;
+
 };
 
 

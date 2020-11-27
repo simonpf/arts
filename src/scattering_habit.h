@@ -38,8 +38,7 @@
 #include "eigen.h"
 #include "optproperties.h"
 #include "scattering.h"
-#include "matpackV.h"
-#include "scatlib/particle_model.h"
+#include "scattering/particle_habit.h"
 
 #ifndef __ARTS_SCATTERING_HABIT_H__
 #define __ARTS_SCATTERING_HABIT_H__
@@ -48,42 +47,42 @@ namespace detail {
 
 /** Extract backward scattering coefficient from phase matrix.
  *
- * @param phase_matrix Phase matrix in scatlib format.
+ * @param phase_matrix Phase matrix in scattering format.
  * @return Eigen tensor containing the backscattering coefficient in
- *     scatlib-compatible format.
+ *     scattering-compatible format.
  */
 EigenTensor<7> extract_backward_scattering_coeff(
     const EigenTensor<7> &phase_matrix);
 
 /** Extract forward scattering coefficient from phase matrix.
  *
- * @param phase_matrix Phase matrix in scatlib format.
+ * @param phase_matrix Phase matrix in scattering format.
  * @return Eigen tensor containing the forward scattering coefficient in
- *     scatlib-compatible format.
+ *     scattering-compatible format.
  */
 EigenTensor<7> extract_forward_scattering_coeff(
     const EigenTensor<7> &phase_matrix);
 
-/** Convert ARTS to scatlib format.
+/** Convert ARTS to scattering format.
  *
- * This function converts ARTS phase matrix data to scatlib format.
+ * This function converts ARTS phase matrix data to scattering format.
  *
  * @param tensor ARTS phase matrix data.
- * @return Eigen tensor containing the phase matrix in scatlib-compatible format.
+ * @return Eigen tensor containing the phase matrix in scattering-compatible format.
  */
-EigenTensor<7> arts_to_scatlib(const Tensor7 &tensor);
+EigenTensor<7> arts_to_scattering(const Tensor7 &tensor);
 
-/** Convert ARTS to scatlib format.
+/** Convert ARTS to scattering format.
  *
  * This function converts a ARTS extinction matrix or absorption
- * vector data to scatlib format
+ * vector data to scattering format
  *
  * @param tensor The input data to convert.
- * @return Eigen tensor containing the data in scatlib-compatible format.
+ * @return Eigen tensor containing the data in scattering-compatible format.
  */
-EigenTensor<7> arts_to_scatlib(const Tensor5 &tensor);
+EigenTensor<7> arts_to_scattering(const Tensor5 &tensor);
 
-scatlib::SingleScatteringData arts_to_scatlib(
+scattering::SingleScatteringData arts_to_scatlib(
     const SingleScatteringData &arts_data);
 
 
@@ -133,7 +132,7 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
   ScatteringHabit(const String name,
                   const Agenda &pnd_agenda,
                   ArrayOfString pnd_agenda_input,
-                  std::shared_ptr<scatlib::ParticleModel> particle_model);
+                  std::shared_ptr<scattering::ParticleHabit> particle_model);
 
   ScatteringHabit(const ScatteringHabit &) = default;
   ScatteringHabit &operator=(const ScatteringHabit &) = default;
@@ -177,7 +176,7 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
   Agenda pnd_agenda_;
   ArrayOfString pnd_agenda_input_;
   Numeric phase_function_norm_ = 1.0;
-  std::shared_ptr<scatlib::ParticleModel> particle_model_;
+  std::shared_ptr<scattering::ParticleHabit> particle_model_;
 };
 
 

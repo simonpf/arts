@@ -245,11 +245,6 @@ if (${CMAKE_VERSION} VERSION_LESS "2.8.8")
   enable_language (Fortran)
 endif()
 
-########## Scatlib #########
-
-# find_package(scatlib REQUIRED)
-find_package(scatlib REQUIRED)
-
 ########## BLAS/LAPACK support #########
 
 find_package (LAPACK REQUIRED)

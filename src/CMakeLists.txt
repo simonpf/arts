@@ -4,7 +4,7 @@ include_directories ( ${CMAKE_CURRENT_BINARY_DIR}
                       ${CMAKE_SOURCE_DIR}/3rdparty/invlib/src
                       ${CMAKE_SOURCE_DIR}/3rdparty/Eigen_unsupported
                       ${CMAKE_SOURCE_DIR}/3rdparty/cdisort
-                      ${scatlib_INCLUDE_DIR}
+                      ${CMAKE_SOURCE_DIR}/3rdparty/scattering/include
                     )
 
 if (NETCDF_FOUND)

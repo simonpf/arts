@@ -904,10 +904,19 @@ void run_cdisort(Workspace& ws,
   auto extinction = bulk_properties.get_extinction_coefficients();
   auto absorption = bulk_properties.get_absorption_coefficients();
 
-  std::cout << "EXTINCTION REF: " << std::endl;
-  std::cout << ext_bulk_par << std::endl;
-  std::cout << "EXTINCTION CHECK: " << std::endl;
-  std::cout << extinction << std::endl;
+
+  xml_write_to_file("bulk_absorption_stokes_1.xml",
+                    ext_bulk_par,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
+
+  xml_write_to_file("bulk_extinction_stokes_1.xml",
+                    ext_bulk_par,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
+
 
 
   // Optical depth of layers
@@ -939,6 +948,8 @@ void run_cdisort(Workspace& ws,
   ds.bc.btemp = surface_skin_t;
   ds.bc.temis = 1.;
 
+
+
   Vector pfct_angs;
   get_angs(pfct_angs, scat_data, Npfct);
   Index nang = pfct_angs.nelem();
@@ -952,6 +963,12 @@ void run_cdisort(Workspace& ws,
   auto coeffs = average_and_invert(bulk_properties.get_legendre_coefficients());
   Tensor3 pmom(nf_ssd, ds.nlyr, Nlegendre);
   get_pmom(pmom, pfct_bulk_par, pfct_angs, Nlegendre);
+
+  xml_write_to_file("phase_matrix_moments.xml",
+                    pmom,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
 
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
     sprintf(ds.header, "ARTS Calc f_index = %ld", f_index);
