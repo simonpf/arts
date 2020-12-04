@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<arts version="1" format="ascii">
+<Array nelem="1" type="ArrayOfScatteringMetaData">
+<Array nelem="3" type="ScatteringMetaData">
+<ScatteringMetaData version="3">
+<String>"Meta data for Liquid sphere"</String>
+<String>"location: Chalmers"</String>
+<String>"water_ellison07"</String>
+<Numeric>1.2430413e-09</Numeric>
+<Numeric>1.3340199e-04</Numeric>
+<Numeric>1.3340199e-04</Numeric>
+<Numeric>1.3340199e-04</Numeric>
+</ScatteringMetaData>
+<ScatteringMetaData version="3">
+<String>"Meta data for Liquid sphere"</String>
+<String>"location: Chalmers"</String>
+<String>"water_ellison07"</String>
+<Numeric>2.2545910e-06</Numeric>
+<Numeric>1.6268832e-03</Numeric>
+<Numeric>1.6268832e-03</Numeric>
+<Numeric>1.6268832e-03</Numeric>
+</ScatteringMetaData>
+<ScatteringMetaData version="3">
+<String>"Meta data for Liquid sphere"</String>
+<String>"location: Chalmers"</String>
+<String>"water_ellison07"</String>
+<Numeric>3.4738515e-03</Numeric>
+<Numeric>1.8790466e-02</Numeric>
+<Numeric>1.8790466e-02</Numeric>
+<Numeric>1.8790466e-02</Numeric>
+</ScatteringMetaData>
+</Array>
+</Array>
+</arts>
