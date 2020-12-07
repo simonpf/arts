@@ -45,10 +45,10 @@ void scattering_speciesCalcBulkAbsorptionCoeff(Workspace &ws,
     Index n_lon_inc = aa_grid.nelem();
     Index n_lat_inc = za_grid.nelem();
     Index n_props = pbp_names.size();
-    Index n_lon = t_field.npages();
+    Index n_p = t_field.npages();
     Index n_lat = t_field.nrows();
-    Index n_alt = t_field.ncols();
-    Index n_layers = n_lon * n_lat * n_alt;
+    Index n_lon = t_field.ncols();
+    Index n_layers = n_lon * n_lat * n_p;
 
     //
     // Prepare scattering data.
@@ -70,11 +70,11 @@ void scattering_speciesCalcBulkAbsorptionCoeff(Workspace &ws,
     Matrix pbp_field_flat{static_cast<Index>(pbp_names.size()), n_layers};
     Vector temperature = Vector(n_layers);
     Index index = 0;
-    for (Index i_lon = 0; i_lon < n_lon; ++i_lon) {
+    for (Index i_p = 0; i_p < n_p; ++i_p) {
         for (Index i_lat = 0; i_lat < n_lat; ++i_lat) {
-            for (Index i_alt = 0; i_alt < n_alt; ++i_alt) {
-                pbp_field_flat(joker, index) = pbp_field(joker, i_lon, i_lat, i_alt);
-                temperature[index] = t_field(i_lon, i_lat, i_alt);
+            for (Index i_lon = 0; i_lon < n_lon; ++i_lon) {
+                pbp_field_flat(joker, index) = pbp_field(joker, i_p, i_lat, i_lon);
+                temperature[index] = t_field(i_p, i_lat, i_lon);
                 index += 1;
             }
         }
@@ -97,19 +97,19 @@ void scattering_speciesCalcBulkAbsorptionCoeff(Workspace &ws,
     //
 
     index = 0;
-    out = Tensor6(n_lon, n_lat, n_alt, n_freq, n_lon_inc, n_lat_inc, 0.0);
-    for (Index i_lon = 0; i_lon < n_lon; ++i_lon) {
-        for (Index i_lat = 0; i_lat < n_lat; i_lat++) {
-            for (Index i_alt = 0; i_alt < n_alt; ) {
+    out = Tensor6(n_p, n_lat, n_lon, n_freq, n_lon_inc, n_lat_inc, 0.0);
+    for (Index i_p = 0; i_p < n_p; ++i_p) {
+        for (Index i_lat = 0; i_lat < n_lat; ++i_lat) {
+            for (Index i_lon = 0; i_lon < n_lon; ++i_lon) {
                 for (Index i_freq = 0; i_freq < n_freq; ++i_freq) {
                     for (Index i_lon_inc = 0; i_lon_inc < n_lon_inc; ++i_lon_inc) {
                         for (Index i_lat_inc = 0; i_lat_inc < n_lat_inc; ++i_lat_inc) {
-                            out(i_lon, i_lat, i_alt, i_freq, i_lon_inc, i_lat_inc) =
+                            out(i_p,  i_lat, i_lon, i_freq, i_lon_inc, i_lat_inc) =
                                 absorption(i_freq, index, i_lon_inc, i_lat_inc);
-                            index += 1;
                         }
                     }
                 }
+                index += 1;
             }
         }
     }

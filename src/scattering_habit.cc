@@ -367,6 +367,7 @@ BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
                     pnd_agenda_);
 
   auto n_levels = pnd_data.nrows();
+  std::cout << "Number densities: " << pnd_data << std::endl;
   Array<scattering::SingleScatteringData> bulk_properties(n_levels);
   for (Index i = 0; i < n_levels; ++i) {
       EigenVector number_densities = to_eigen(pnd_data(i, joker));

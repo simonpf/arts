@@ -817,6 +817,28 @@ void run_cdisort(Workspace& ws,
                 pnd_profiles,
                 cloudbox_limits);
 
+  xml_write_to_file("p_profile.xml",
+                    p,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
+  xml_write_to_file("z_profile.xml",
+                    z,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
+  xml_write_to_file("t_profile.xml",
+                    t,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
+  xml_write_to_file("pbf_profiles.xml",
+                    pbf,
+                    FileType::FILE_TYPE_BINARY,
+                    0,
+                    verbosity);
+
+
   disort_state ds;
   disort_output out;
 
@@ -906,7 +928,7 @@ void run_cdisort(Workspace& ws,
 
 
   xml_write_to_file("bulk_absorption_stokes_1.xml",
-                    ext_bulk_par,
+                    abs_bulk_par,
                     FileType::FILE_TYPE_BINARY,
                     0,
                     verbosity);
