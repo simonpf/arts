@@ -265,15 +265,15 @@ ScatteringHabit::ScatteringHabit(
 ArrayOfString ScatteringHabit::get_dpnd_data_dx_names(
     ArrayOfRetrievalQuantity jacobian_quantities, bool jacobian_do) const {
   ArrayOfString dpnd_data_dx_names = {};
-  if (jacobian_do) {
-    for (auto &jq : jacobian_quantities) {
-      if (jq.MainTag() == SCATSPECIES_MAINTAG) {
-        if (jq.Subtag() == name_) {
-          dpnd_data_dx_names.push_back(jq.SubSubtag());
-        }
-      }
-    }
-  }
+  //if (jacobian_do) {
+  //  for (auto &jq : jacobian_quantities) {
+  //    if (jq.MainTag() == SCATSPECIES_MAINTAG) {
+  //      if (jq.Subtag() == name_) {
+  //        dpnd_data_dx_names.push_back(jq.SubSubtag());
+  //      }
+  //    }
+  //  }
+  //}
   return dpnd_data_dx_names;
 }
 

@@ -123,7 +123,6 @@ add_custom_target (BuildAutoSources DEPENDS auto_md.h
 add_executable (make_auto_md_h
         agenda_record.cc
         arts.cc
-        auto_workspace.h
         file.cc
         make_auto_md_h.cc
         messages.cc

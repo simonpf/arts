@@ -250,12 +250,11 @@ endif()
 find_package (LAPACK REQUIRED)
 
 ########## NetCDF support #########
-if (ENABLE_NETCDF)
-  include (FindNetCDF)
-  if (NOT NETCDF_FOUND)
-      message(FATAL_ERROR "NetCDF library not found")
-  endif()
-endif (ENABLE_NETCDF)
+
+find_package(NetCDF)
+if (NOT NETCDF_FOUND)
+    message(FATAL_ERROR "NetCDF library not found")
+endif()
 
 ########## FFTW support #########
 if (NOT NO_FFTW)

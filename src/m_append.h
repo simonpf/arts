@@ -274,7 +274,6 @@ inline void Append(  // WS Generic Output:
  * @param direction_name Not used.
  * @param Verbosity Not used.
  */
-void Append(  // WS Generic Output:
 inline void Append(  // WS Generic Output:
     Matrix& out,
     const String& /* out_name */,
@@ -349,8 +348,6 @@ inline void Append(  // WS Generic Output:
   // Copy in to last part of out:
   out[Range(dummy.nelem(), 1)] = in;
 }
-
-inline void Append(  // WS Generic Output:
 
 /** Append overload for appending matrices to Tensor3.
  *
