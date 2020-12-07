@@ -24,12 +24,15 @@
   \author Simon Pfreundschuh <simon.pfreundschuh@chalmers.se>
   \date   2020-09-15
 
-  \brief Representation of habits of scattering particles with associated PSD.
+  \brief Declaration of classes related to the representation of scattering
+         habits, i.e. habits of scattering particles and associated PSD>
 
-   This file contains the definition of the ScatteringHabit class which
-   represents a scattering species described by an explicit scattering model
-   consisting of scatter properties for different particle sizes together with
-   a particle size distribution.
+   This file contains the definitions of the ScatteringParticle,
+   ArrayOfScatteringParticles and of the ScatteringHabit class. A scattering
+   particle represents a single scattering particle with given size and
+   scattering data. A ScatteringHabit is a collection of sucher particles
+   together with a particles size distribution (PSD), which defines the
+   distribution of the particles in the habit for different atmopheric states.
 */
 #include <iostream>
 
@@ -42,51 +45,19 @@
 #ifndef __ARTS_SCATTERING_HABIT_H__
 #define __ARTS_SCATTERING_HABIT_H__
 
-namespace detail {
+////////////////////////////////////////////////////////////////////////////////
+// ScatteringParticle and ArrayOfScatteringParticle
+////////////////////////////////////////////////////////////////////////////////
 
-/** Extract backward scattering coefficient from phase matrix.
- *
- * @param phase_matrix Phase matrix in scattering format.
- * @return Eigen tensor containing the backscattering coefficient in
- *     scattering-compatible format.
- */
-EigenTensor<7> extract_backward_scattering_coeff(
-    const EigenTensor<7> &phase_matrix);
+typedef scattering::Particle ScatteringParticle;
+typedef Array<ScatteringParticle> ArrayOfScatteringParticle;
 
-/** Extract forward scattering coefficient from phase matrix.
- *
- * @param phase_matrix Phase matrix in scattering format.
- * @return Eigen tensor containing the forward scattering coefficient in
- *     scattering-compatible format.
- */
-EigenTensor<7> extract_forward_scattering_coeff(
-    const EigenTensor<7> &phase_matrix);
+std::ostream &operator<<(std::ostream &out, const ScatteringParticle &);
+std::ostream &operator<<(std::ostream &out, const ArrayOfScatteringParticle &);
 
-/** Convert ARTS to scattering format.
- *
- * This function converts ARTS phase matrix data to scattering format.
- *
- * @param tensor ARTS phase matrix data.
- * @return Eigen tensor containing the phase matrix in scattering-compatible format.
- */
-EigenTensor<7> arts_to_scattering(const Tensor7 &tensor);
-
-/** Convert ARTS to scattering format.
- *
- * This function converts a ARTS extinction matrix or absorption
- * vector data to scattering format
- *
- * @param tensor The input data to convert.
- * @return Eigen tensor containing the data in scattering-compatible format.
- */
-EigenTensor<7> arts_to_scattering(const Tensor5 &tensor);
-
-scattering::SingleScatteringData arts_to_scatlib(
-    const SingleScatteringData &arts_data);
-
-
-}  // namespace detail
-
+////////////////////////////////////////////////////////////////////////////////
+// ScatteringHabit
+////////////////////////////////////////////////////////////////////////////////
 /** ScatteringHabit
  *
  * A scattering habit describes an atmospheric scattering species through  an
@@ -197,6 +168,5 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
   Numeric phase_function_norm_ = 1.0;
   std::shared_ptr<scattering::ParticleHabit> particle_model_;
 };
-
 
 #endif

@@ -28,11 +28,18 @@
 */
 #include "scattering_habit.h"
 #include "auto_md.h"
+#include <iomanip>
 
 const String SCATSPECIES_MAINTAG = "Scattering species";
 
 namespace detail {
 
+/** Extract backward scattering coefficient from phase matrix.
+ *
+ * @param phase_matrix Phase matrix in scattering format.
+ * @return Eigen tensor containing the backscattering coefficient in
+ *     scattering-compatible format.
+ */
 EigenTensor<7> extract_backward_scattering_coeff(
     const EigenTensor<7> &phase_matrix) {
   auto dimensions = phase_matrix.dimensions();
@@ -44,6 +51,12 @@ EigenTensor<7> extract_backward_scattering_coeff(
   return backward_scattering_coeff.reshape(dimensions);
 }
 
+/** Extract forward scattering coefficient from phase matrix.
+ *
+ * @param phase_matrix Phase matrix in scattering format.
+ * @return Eigen tensor containing the forward scattering coefficient in
+ *     scattering-compatible format.
+ */
 EigenTensor<7> extract_forward_scattering_coeff(
     const EigenTensor<7> &phase_matrix) {
   auto dimensions = phase_matrix.dimensions();
@@ -55,6 +68,13 @@ EigenTensor<7> extract_forward_scattering_coeff(
   return backward_scattering_coeff.reshape(dimensions);
 }
 
+/** Convert ARTS to scattering format.
+ *
+ * This function converts ARTS phase matrix data to scattering format.
+ *
+ * @param tensor ARTS phase matrix data.
+ * @return Eigen tensor containing the phase matrix in scattering-compatible format.
+ */
 EigenTensor<7> arts_to_scattering(const Tensor7 &tensor) {
     EigenTensor<7> tensor_eigen = to_eigen(tensor);
     std::array<Eigen::Index, 7> shuffle_dimensions = {0, 1, 5, 4, 3, 2, 6};
@@ -62,6 +82,14 @@ EigenTensor<7> arts_to_scattering(const Tensor7 &tensor) {
     return tensor_eigen.shuffle(shuffle_dimensions);
 }
 
+/** Convert ARTS to scattering format.
+ *
+ * This function converts a ARTS extinction matrix or absorption
+ * vector data to scattering format
+ *
+ * @param tensor The input data to convert.
+ * @return Eigen tensor containing the data in scattering-compatible format.
+ */
 EigenTensor<7> arts_to_scattering(const Tensor5 &tensor) {
   EigenTensor<5> tensor_eigen = to_eigen(tensor);
   auto result = scattering::eigen::unsqueeze<4, 5>(tensor_eigen);
@@ -69,7 +97,12 @@ EigenTensor<7> arts_to_scattering(const Tensor5 &tensor) {
   return result.shuffle(shuffle_dimensions);
 }
 
-scattering::SingleScatteringData artsscat_to_scattering(
+/** Convert ARTS legacy scattering data to new scattering format.
+ *
+ * @param arts_data SingleScatteringData object containing the scattering
+ * data in legacy format.
+ */
+scattering::SingleScatteringData arts_to_scattering(
     const SingleScatteringData &arts_data) {
   EigenVector f_grid = to_eigen(arts_data.f_grid);
   EigenVector t_grid = to_eigen(arts_data.T_grid);
@@ -109,8 +142,86 @@ scattering::SingleScatteringData artsscat_to_scattering(
                                        forward_scattering_coeff);
 }
 
-
 }  // namespace detail
+
+////////////////////////////////////////////////////////////////////////////////
+// ScatteringParticle and ArrayOfScatteringParticle
+////////////////////////////////////////////////////////////////////////////////
+
+std::ostream &operator<<(std::ostream &output,
+                         const scattering::DataFormat format) {
+  switch (format) {
+    case scattering::DataFormat::Gridded:
+      output << "gridded";
+      break;
+    case scattering::DataFormat::Spectral:
+      output << "spectral";
+      break;
+  }
+  return output;
+}
+
+std::ostream &operator<<(std::ostream &output,
+                         const scattering::ParticleType format) {
+  switch (format) {
+    case scattering::ParticleType::Random:
+      output << "random";
+      break;
+    case scattering::ParticleType::AzimuthallyRandom:
+      output << "azimuthally random";
+      break;
+    case scattering::ParticleType::General:
+      output << "general";
+      break;
+  }
+  return output;
+}
+
+std::ostream &operator<<(std::ostream &output,
+                         const ScatteringParticle &particle) {
+  auto name = particle.get_name();
+  auto source = particle.get_source();
+  auto refractive_index = particle.get_refractive_index();
+
+  output << "Scattering particle: " << name;
+  if (source != "") {
+    output << " (" << source << ")";
+  }
+  output << std::endl;
+  if (refractive_index != "") {
+    output << std::setw(30)
+           << "\tRefractive index: " << particle.get_refractive_index()
+           << std::endl;
+  }
+  output << std::setw(30) << "\tParticle type: " << particle.get_particle_type() << std::endl;
+  output << std::setw(30) << "\tScattering data format: " << particle.get_data_format()
+         << std::endl;
+  output << std::setw(30) << "\tVolume-equivalent diameter: " << particle.get_d_eq() << std::endl;
+  output << std::setw(30) << "\tMaximum diameter: " << particle.get_d_max() << std::endl;
+  output << std::setw(30) << "\tMass: " << particle.get_d_max() << std::endl;
+  output << std::endl;
+  return output;
+}
+
+std::ostream &operator<<(std::ostream &output,
+                         const ArrayOfScatteringParticle &array) {
+
+    auto n_particles = array.nelem();
+    auto p0 = array[0];
+    auto pn = array[n_particles - 1];
+    output << "Array of Scattering particles with " << n_particles;
+    output << " particles:" << std::endl;
+    output << std::setw(30) << "\tVolume-equivalent diameters: " << p0.get_d_eq()
+           << ", ..., " << pn.get_d_eq() << std::endl;
+    output << std::setw(30) << "\tMasses: " << p0.get_d_eq()
+           << ", ..., " << pn.get_d_eq() << std::endl;
+  return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// ScatteringHabit
+////////////////////////////////////////////////////////////////////////////////
+
 
 ScatteringHabit::ScatteringHabit() {}
 ScatteringHabit::~ScatteringHabit() {}
@@ -131,7 +242,7 @@ ScatteringHabit::ScatteringHabit(
   EigenVector d_eq(n), d_max(n), mass(n);
 
   for (size_t i = 0; i < n; ++i) {
-    auto scattering_data = detail::artsscat_to_scattering(arts_scat_data[i]);
+    auto scattering_data = detail::arts_to_scattering(arts_scat_data[i]);
     auto meta = meta_data[i];
     particles.emplace_back(meta.mass,
                            meta.diameter_volume_equ,
@@ -266,11 +377,10 @@ BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
   return BulkScatteringProperties(bulk_properties);
 }
 
-
-std::ostream & operator<<(std::ostream &output, const ScatteringHabit &habit) {
-    output << "Scattering habit: " << habit.name_ << std::endl;
-    output << "\t Particle d_eq: " << habit.get_particle_d_eq() << std::endl;
-    output << "\t Particle d_max: " << habit.get_particle_d_max() << std::endl;
-    output << std::endl;
-    return output;
+std::ostream &operator<<(std::ostream &output, const ScatteringHabit &habit) {
+  output << "Scattering habit: " << habit.name_ << std::endl;
+  output << "\t Particle d_eq: " << habit.get_particle_d_eq() << std::endl;
+  output << "\t Particle d_max: " << habit.get_particle_d_max() << std::endl;
+  output << std::endl;
+  return output;
 }

@@ -5,8 +5,11 @@ include_directories ( ${CMAKE_CURRENT_BINARY_DIR}
                       ${CMAKE_SOURCE_DIR}/3rdparty/Eigen_unsupported
                       ${CMAKE_SOURCE_DIR}/3rdparty/cdisort
                       ${CMAKE_SOURCE_DIR}/3rdparty/scattering/include
+                      ${CMAKE_SOURCE_DIR}/3rdparty/netcdfhpp/include
+                      ${CMAKE_SOURCE_DIR}/3rdparty/scattering/ext/shtns
                     )
 
+message (WARNING ${scattering_INCLUDE_DIR})
 if (NETCDF_FOUND)
   include_directories (${NETCDF_INCLUDE_DIR})
   set (NETCDF_CC_FILES
@@ -216,6 +219,7 @@ add_library (artscore STATIC
   m_array.cc
   m_artstime.cc
   m_atmosphere.cc
+  m_arts_ssdb.cc
   m_basic_types.cc
   m_batch.cc
   m_checked.cc
