@@ -1925,6 +1925,34 @@ void xml_write_to_stream(ostream& os_xml,
 
   os_xml << '\n';
 }
+//=== ArrayOfScatteringParticle===========================================
+
+//! Reads ArrayOfScatteringMetaData from XML input stream
+/*!
+  \param is_xml   XML Input stream
+  \param asmdata  ArrayOfScatteringMetaData return value
+  \param pbifs    Pointer to binary input stream. NULL in case of ASCII file.
+*/
+void xml_read_from_stream(istream& is_xml,
+                          ArrayOfScatteringParticle& asmdata,
+                          bifstream* pbifs,
+                          const Verbosity& verbosity) {
+}
+
+//! Writes ArrayOfScatteringMetaData to XML output stream
+/*!
+  \param os_xml   XML Output stream
+  \param asmdata  ArrayOfScatteringMetaData
+  \param pbofs    Pointer to binary file stream. NULL for ASCII output.
+  \param name     Optional name attribute
+*/
+void xml_write_to_stream(ostream& os_xml,
+                         const ArrayOfScatteringParticle& asmdata,
+                         bofstream* pbofs,
+                         const String& name,
+                         const Verbosity& verbosity) {
+}
+
 //=== ArrayOfScatteringSpecies===========================================
 
 //! Reads ArrayOfScatteringMetaData from XML input stream

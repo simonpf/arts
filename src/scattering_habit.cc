@@ -193,12 +193,12 @@ std::ostream &operator<<(std::ostream &output,
            << "\tRefractive index: " << particle.get_refractive_index()
            << std::endl;
   }
-  output << std::setw(30) << "\tParticle type: " << particle.get_particle_type() << std::endl;
-  output << std::setw(30) << "\tScattering data format: " << particle.get_data_format()
+  output << std::setw(30) << std::left << "\tParticle type: " << particle.get_particle_type() << std::endl;
+  output << std::setw(30) << std::left << "\tScattering data format: " << particle.get_data_format()
          << std::endl;
-  output << std::setw(30) << "\tVolume-equivalent diameter: " << particle.get_d_eq() << std::endl;
-  output << std::setw(30) << "\tMaximum diameter: " << particle.get_d_max() << std::endl;
-  output << std::setw(30) << "\tMass: " << particle.get_d_max() << std::endl;
+  output << std::setw(30) << std::left << "\tVolume-equivalent diameter: " << particle.get_d_eq() << " m" << std::endl;
+  output << std::setw(30) << std::left << "\tMaximum diameter: " << particle.get_d_max() << " m" << std::endl;
+  output << std::setw(30) << std::left << "\tMass: " << particle.get_mass() << " kg" << std::endl;
   output << std::endl;
   return output;
 }
@@ -207,14 +207,17 @@ std::ostream &operator<<(std::ostream &output,
                          const ArrayOfScatteringParticle &array) {
 
     auto n_particles = array.nelem();
-    auto p0 = array[0];
-    auto pn = array[n_particles - 1];
     output << "Array of Scattering particles with " << n_particles;
     output << " particles:" << std::endl;
-    output << std::setw(30) << "\tVolume-equivalent diameters: " << p0.get_d_eq()
+
+    if (n_particles > 0) {
+    auto p0 = array[0];
+    auto pn = array[n_particles - 1];
+    output << std::setw(30) << std::left << "\tVolume-equivalent diameters: " << p0.get_d_eq()
            << ", ..., " << pn.get_d_eq() << std::endl;
-    output << std::setw(30) << "\tMasses: " << p0.get_d_eq()
+    output << std::setw(30) << std::left << "\tMasses: " << p0.get_d_eq()
            << ", ..., " << pn.get_d_eq() << std::endl;
+    }
   return output;
 }
 

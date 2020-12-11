@@ -1568,6 +1568,244 @@ void xml_write_to_stream(ostream& os_xml,
   os_xml << '\n';
 }
 
+//=== ScatteringParticle  ======================================
+
+//! Reads SingleScatteringData from XML input stream
+/*!
+  \param is_xml  XML Input stream
+  \param ssdata  SingleScatteringData return value
+  \param pbifs   Pointer to binary input stream. NULL in case of ASCII file.
+*/
+void xml_read_from_stream(istream& is_xml,
+                          ScatteringParticle& ssdata,
+                          bifstream* pbifs,
+                          const Verbosity& verbosity) {
+  ArtsXMLTag tag(verbosity);
+  tag.read_from_stream(is_xml);
+  tag.check_name("ScatteringParticle");
+
+  String name, source, refractive_index;
+  Numeric d_eq, d_max, d_aero;
+  Index particle_type_index;
+  Index data_format_index;
+
+  tag.get_attribute_value("name", name);
+  tag.get_attribute_value("source", source);
+  tag.get_attribute_value("refractive_index", refractive_index);
+
+  tag.get_attribute_value("d_eq", d_eq);
+  tag.get_attribute_value("d_max", d_max);
+  tag.get_attribute_value("d_aero", d_aero);
+
+  tag.get_attribute_value("particle_type", particle_type_index);
+  tag.get_attribute_value("data_format", data_format_index);
+
+  scattering::ParticleType particle_type(
+      static_cast<scattering::ParticleType>(particle_type_index));
+  scattering::DataFormat data_format(
+      static_cast<scattering::DataFormat>(data_format_index));
+
+  switch (data_format) {
+    case scattering::DataFormat::Gridded: {
+      Vector f_grid, t_grid, lon_inc_grid, lat_inc_grid, lon_scat_grid,
+          lat_scat_grid;
+      xml_read_from_stream(is_xml, f_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, t_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, lon_inc_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, lat_inc_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, lon_scat_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, lat_scat_grid, pbifs, verbosity);
+
+      Tensor7 phase_matrix, extinction_matrix, absorption_vector,
+          backward_scattering_coeff, forward_scattering_coeff;
+
+      xml_read_from_stream(is_xml, phase_matrix, pbifs, verbosity);
+      xml_read_from_stream(is_xml, extinction_matrix, pbifs, verbosity);
+      xml_read_from_stream(is_xml, absorption_vector, pbifs, verbosity);
+      xml_read_from_stream(is_xml, forward_scattering_coeff, pbifs, verbosity);
+      xml_read_from_stream(is_xml, backward_scattering_coeff, pbifs, verbosity);
+
+      scattering::SingleScatteringData single_scattering_data{
+          to_eigen(f_grid),
+          to_eigen(t_grid),
+          to_eigen(lon_inc_grid),
+          to_eigen(lat_inc_grid),
+          to_eigen(lon_scat_grid),
+          to_eigen(lat_scat_grid),
+          to_eigen(phase_matrix),
+          to_eigen(extinction_matrix),
+          to_eigen(absorption_vector),
+          to_eigen(backward_scattering_coeff),
+          to_eigen(forward_scattering_coeff)};
+      ssdata = ScatteringParticle({name, source, refractive_index},
+                                  single_scattering_data);
+    }
+    case scattering::DataFormat::Spectral: {
+      Index l_max, m_max;
+      tag.get_attribute_value("l_max", l_max);
+      tag.get_attribute_value("m_max", m_max);
+
+      Vector f_grid, t_grid, lon_inc_grid, lat_inc_grid;
+      xml_read_from_stream(is_xml, f_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, t_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, lon_inc_grid, pbifs, verbosity);
+      xml_read_from_stream(is_xml, lat_inc_grid, pbifs, verbosity);
+
+      Tensor6 phase_matrix_real, phase_matrix_imag;
+      Tensor6 extinction_matrix, absorption_vector, backward_scattering_coeff,
+          forward_scattering_coeff;
+
+      xml_read_from_stream(is_xml, phase_matrix_real, pbifs, verbosity);
+      xml_read_from_stream(is_xml, phase_matrix_imag, pbifs, verbosity);
+      xml_read_from_stream(is_xml, extinction_matrix, pbifs, verbosity);
+      xml_read_from_stream(is_xml, absorption_vector, pbifs, verbosity);
+      xml_read_from_stream(is_xml, forward_scattering_coeff, pbifs, verbosity);
+      xml_read_from_stream(is_xml, backward_scattering_coeff, pbifs, verbosity);
+
+      EigenComplexTensor<6> phase_matrix =
+          EigenTensor<6>(to_eigen(phase_matrix_real))
+              .cast<std::complex<double>>();
+      phase_matrix = 1.0i * EigenTensor<6>(to_eigen(phase_matrix_imag))
+                                .cast<std::complex<double>>();
+
+      scattering::SingleScatteringData single_scattering_data{
+          to_eigen(f_grid),
+          to_eigen(t_grid),
+          to_eigen(lon_inc_grid),
+          to_eigen(lat_inc_grid),
+          scattering::sht::SHT(l_max, m_max),
+          phase_matrix,
+          EigenTensor<6>(to_eigen(extinction_matrix))
+              .cast<std::complex<double>>(),
+          EigenTensor<6>(to_eigen(absorption_vector))
+              .cast<std::complex<double>>(),
+          EigenTensor<6>(to_eigen(backward_scattering_coeff))
+              .cast<std::complex<double>>(),
+          EigenTensor<6>(to_eigen(forward_scattering_coeff))
+              .cast<std::complex<double>>()};
+      ssdata = ScatteringParticle({name, source, refractive_index},
+                                  single_scattering_data);
+    }
+  }
+}
+
+//! Writes ScatteringParticle to XML output stream
+/*!
+  \param os_xml  XML Output stream
+  \param ssdata  SingleScatteringData
+  \param pbofs   Pointer to binary file stream. NULL for ASCII output.
+  \param name    Optional name attribute
+*/
+void xml_write_to_stream(ostream& os_xml,
+                         const ScatteringParticle& particle,
+                         bofstream* pbofs,
+                         const String& name,
+                         const Verbosity& verbosity) {
+    ArtsXMLTag open_tag(verbosity);
+    ArtsXMLTag close_tag(verbosity);
+
+    auto particle_type = particle.get_particle_type();
+    auto data_format = particle.get_data_format();
+
+  open_tag.set_name("ScatteringParticle");
+  open_tag.add_attribute("name", particle.get_name());
+  open_tag.add_attribute("source", particle.get_source());
+  open_tag.add_attribute("refractive_index", particle.get_refractive_index());
+  open_tag.add_attribute("d_eq", particle.get_d_eq());
+  open_tag.add_attribute("d_max", particle.get_d_max());
+  open_tag.add_attribute("d_aero", particle.get_d_aero());
+  open_tag.add_attribute("particle_type", static_cast<Index>(particle_type));
+  open_tag.add_attribute("data_format", static_cast<Index>(data_format));
+
+  auto scattering_data = particle.get_data();
+  switch (data_format) {
+  case scattering::DataFormat::Gridded: {
+
+      open_tag.write_to_stream(os_xml);
+      os_xml << '\n';
+
+      // Grid vectors.
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_f_grid()),
+                          pbofs, "f_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_t_grid()),
+                          pbofs, "t_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_lon_inc()),
+                          pbofs, "lon_inc_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_lat_inc()),
+                          pbofs, "lat_inc_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_lon_scat()),
+                          pbofs, "lon_scat_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_lat_scat()),
+                          pbofs, "lat_scat_grid", verbosity);
+
+      // Data tensors.
+      auto phase_matrix = to_arts(scattering_data.get_phase_matrix_data());
+      xml_write_to_stream(os_xml, phase_matrix, pbofs, "phase_matrix", verbosity);
+      auto extinction_matrix = to_arts(scattering_data.get_extinction_matrix_data());
+      xml_write_to_stream(os_xml, extinction_matrix, pbofs, "extinction_matrix", verbosity);
+      auto absorption_vector = to_arts(scattering_data.get_absorption_vector_data());
+      xml_write_to_stream(os_xml, absorption_vector, pbofs, "absorption_vector", verbosity);
+      auto backward_scattering_coeff = to_arts(scattering_data.get_backward_scattering_coeff());
+      xml_write_to_stream(os_xml, backward_scattering_coeff, pbofs, "backward_scattering_coeff", verbosity);
+      auto forward_scattering_coeff = to_arts(scattering_data.get_forward_scattering_coeff());
+      xml_write_to_stream(os_xml, forward_scattering_coeff, pbofs, "forward_scattering_coeff", verbosity);
+      break;
+  }
+  case scattering::DataFormat::Spectral: {
+
+
+      open_tag.add_attribute("l_max_scat", scattering_data.get_l_max_scat());
+      open_tag.add_attribute("m_max_scat", scattering_data.get_l_max_scat());
+
+      open_tag.write_to_stream(os_xml);
+      os_xml << '\n';
+
+      // Grid vectors.
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_t_grid()),
+                          pbofs, "f_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_t_grid()),
+                          pbofs, "t_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_lon_inc()),
+                          pbofs, "lon_inc_grid", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(scattering_data.get_lat_inc()),
+                          pbofs, "lat_inc_grid", verbosity);
+
+      // Data tensors.
+      auto phase_matrix = scattering_data.get_phase_matrix_data_spectral();
+      xml_write_to_stream(os_xml,
+                          to_arts(static_cast<EigenTensor<6>>(phase_matrix.real())),
+                          pbofs, "phase_matrix_real", verbosity);
+      xml_write_to_stream(os_xml,
+                          to_arts(static_cast<EigenTensor<6>>(phase_matrix.imag())),
+                          pbofs, "phase_matrix_imag", verbosity);
+
+      auto extinction_matrix = to_arts(scattering_data.get_extinction_matrix_data());
+      xml_write_to_stream(os_xml, extinction_matrix, pbofs, "extinction_matrix", verbosity);
+      auto absorption_vector = to_arts(scattering_data.get_absorption_vector_data());
+      xml_write_to_stream(os_xml, absorption_vector, pbofs, "absorption_vector", verbosity);
+      auto backward_scattering_coeff = to_arts(scattering_data.get_backward_scattering_coeff());
+      xml_write_to_stream(os_xml, backward_scattering_coeff, pbofs, "backward_scattering_coeff", verbosity);
+      auto forward_scattering_coeff = to_arts(scattering_data.get_forward_scattering_coeff());
+      xml_write_to_stream(os_xml, forward_scattering_coeff, pbofs, "forward_scattering_coeff", verbosity);
+      break;
+  }
+  }
+  close_tag.set_name("/ScatteringParticle");
+  close_tag.write_to_stream(os_xml);
+
+  os_xml << '\n';
+}
+
 //=== ScatteringSpecies ======================================
 
 //! Reads SingleScatteringData from XML input stream
@@ -1580,6 +1818,7 @@ void xml_read_from_stream(istream& is_xml,
                           ScatteringSpecies& ssdata,
                           bifstream* pbifs,
                           const Verbosity& verbosity) {
+    throw runtime_error("Method not implemented!");
 }
 
 //! Writes SingleScatteringData to XML output stream
@@ -1594,6 +1833,7 @@ void xml_write_to_stream(ostream& os_xml,
                          bofstream* pbofs,
                          const String& name,
                          const Verbosity& verbosity) {
+    throw runtime_error("Method not implemented!");
 }
 
 //=== ScatteringSpecies ======================================

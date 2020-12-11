@@ -7,5 +7,7 @@ add_subdirectory(tmatrix)
 add_subdirectory(wigner)
 add_subdirectory(Faddeeva)
 add_subdirectory(gui)
+add_subdirectory(pybind11)
+
 add_subdirectory(netcdfhpp)
 add_subdirectory(scattering)

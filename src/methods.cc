@@ -15956,6 +15956,43 @@ void define_md_data_raw() {
       GIN_DESC("Vibrational data [nlevels]")));
 
   md_data_raw.push_back(create_mdrecord(
+                            NAME("scattering_particleReadFromARTSSSDB"),
+                            DESCRIPTION(
+                                "Reads scattering data for single particle from ARTS SSDB.\n"
+                                ),
+                            AUTHORS("Simon Pfreundschuh"),
+                            OUT(),
+                            GOUT("particle"),
+                            GOUT_TYPE("ScatteringParticle"),
+                            GOUT_DESC("ScatteringParticle containing the read scattering data\n"
+                                      "and particle properties."),
+                            IN(),
+                            GIN("filename"),
+                            GIN_TYPE("String"),
+                            GIN_DEFAULT(NODEF),
+                            GIN_DESC("The name of the file to read.")
+                            ));
+
+  md_data_raw.push_back(create_mdrecord(
+                            NAME("particle_habitReadFromARTSSSDB"),
+                            DESCRIPTION(
+                                "Reads full particle habit (folder) from ARTS single-scattering.\n"
+                                "database.\n"
+                                ),
+                            AUTHORS("Simon Pfreundschuh"),
+                            OUT(),
+                            GOUT("particles"),
+                            GOUT_TYPE("ArrayOfScatteringParticle"),
+                            GOUT_DESC("ArrayOfScatteringParticle containing scattering data read\n"
+                                      "from all files in the directory."),
+                            IN(),
+                            GIN("path"),
+                            GIN_TYPE("String"),
+                            GIN_DEFAULT(NODEF),
+                            GIN_DESC("Path of the ARTS SSDB database.")
+                            ));
+
+  md_data_raw.push_back(create_mdrecord(
       NAME("ScatElementsPndAndScatAdd"),
       DESCRIPTION(
           "Adds single scattering data and particle number density for\n"

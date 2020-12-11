@@ -9,7 +9,7 @@ include_directories ( ${CMAKE_CURRENT_BINARY_DIR}
                       ${CMAKE_SOURCE_DIR}/3rdparty/scattering/ext/shtns
                     )
 
-message (WARNING ${scattering_INCLUDE_DIR})
+
 if (NETCDF_FOUND)
   include_directories (${NETCDF_INCLUDE_DIR})
   set (NETCDF_CC_FILES
@@ -131,7 +131,7 @@ add_executable (make_auto_md_h
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_h methods matpack scattering)
+target_link_libraries (make_auto_md_h methods matpack)
 
 add_custom_command (
         OUTPUT auto_md.h
@@ -152,7 +152,7 @@ add_executable (make_auto_md_cc
         workspace_ng.cc
         )
 
-target_link_libraries (make_auto_md_cc methods matpack scattering)
+target_link_libraries (make_auto_md_cc methods matpack)
 
 add_custom_command (
         OUTPUT auto_md.cc
@@ -336,6 +336,7 @@ if (FFTW_FOUND)
   target_link_libraries (artscore ${FFTW_LIBRARIES})
 endif()
 
+message (WARNING ${NETCDF_FOUND} ${NETCDF_LIBRARIES})
 if (NETCDF_FOUND)
   target_link_libraries (artscore ${NETCDF_LIBRARIES})
 endif (NETCDF_FOUND)

@@ -572,6 +572,13 @@ inline void Append(  // WS Generic Output:
     const String& /*direction*/,
     const String& /* in_name */,
     const String& /* direction_name */,
-    const Verbosity& /*verbosity*/);
+    const Verbosity& /*verbosity*/) {
+// String stream for easy string operations:
+ostringstream os;
+
+os << out << in;
+
+out = os.str();
+}
 
 #endif  // m_append_h

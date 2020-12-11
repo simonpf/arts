@@ -45,7 +45,6 @@ void particle_habitReadFromARTSSSDB(ArrayOfScatteringParticle &out,
     auto n_particles = habit_folder.get_n_particles();
     out.resize(0);
     out.reserve(n_particles);
-    decltype(n_particles) index = 0;
     for (auto iterator = habit_folder.begin(); iterator != habit_folder.end(); ++iterator) {
         out.push_back((*iterator).to_particle());
     }

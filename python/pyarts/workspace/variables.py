@@ -15,16 +15,35 @@ Attributes:
 
 import ctypes as c
 import os
-import numpy as np
 import re
-import scipy as sp
+import sys
 import tempfile
 import weakref
+
+import numpy as np
+import scipy as sp
 
 from pyarts.workspace.api import arts_api
 from pyarts.workspace.agendas import Agenda
 from pyarts.xml.names import tensor_names
 
+def _is_arts_class(value):
+    """
+    Determines whether a given value is a Python representation of a native
+    ARTS class by checking whether parent module provides a copy_to_wsv method.
+    """
+    value_module = sys.modules[value.__module__]
+    return hasattr(value_module, "copy_to_wsv")
+
+def _is_xml_writable(value):
+    """
+    Determines whether a given Python value can be transferred to ARTS by
+    writing it to an xml file.
+    """
+    return hasattr(value, 'write_xml') and type(value).__name__ in group_names
+
+def _is_copyable(value):
+    return _is_xml_writable(value) or _is_arts_class(value)
 
 class WorkspaceVariable:
     """
@@ -212,7 +231,7 @@ class WorkspaceVariable:
                     raise ValueError(
                         f"Nested array with internal type "
                         f"{type(nested_value)} not supported.")
-        elif hasattr(value, 'write_xml') and type(value).__name__ in group_names:
+        elif _is_copyable(value) and type(value).__name__ in group_names:
             return group_ids[type(value).__name__]
         else:
             raise ValueError(f"Type {type(value)} currently not supported.")

@@ -29,7 +29,7 @@ from pyarts.workspace.api import (arts_api, VariableValueStruct, data_path_push,
                                 include_path_pop, is_empty)
 from pyarts.workspace.methods   import WorkspaceMethod, workspace_methods
 from pyarts.workspace.variables import (WorkspaceVariable, group_names, group_ids,
-                                      workspace_variables)
+                                        workspace_variables, _is_arts_class)
 from pyarts.workspace.agendas   import Agenda
 from pyarts.workspace import variables as V
 from pyarts.workspace.output import CoutCapture
@@ -453,7 +453,10 @@ class Workspace:
                        " WSV {}: {}".format(wsv.name, err.decode()))
                 raise Exception(msg)
         # If the type is not supported by the C API try to write the type to XML
-        # and read into ARTS workspace.
+        # and read into ARTS workspace.single_scattering_data
+        elif _is_arts_class(value):
+            value_module = sys.modules[value.__module__]
+            value_module.copy_to_wsv(self.ptr, wsv.ws_id, value)
         else:
             try:
                 wsv.from_arts(value)
