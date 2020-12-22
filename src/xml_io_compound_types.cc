@@ -1585,7 +1585,7 @@ void xml_read_from_stream(istream& is_xml,
   tag.check_name("ScatteringParticle");
 
   String name, source, refractive_index;
-  Numeric d_eq, d_max, d_aero;
+  Numeric mass, d_eq, d_max, d_aero;
   Index particle_type_index;
   Index data_format_index;
 
@@ -1593,9 +1593,13 @@ void xml_read_from_stream(istream& is_xml,
   tag.get_attribute_value("source", source);
   tag.get_attribute_value("refractive_index", refractive_index);
 
+  tag.get_attribute_value("mass", mass);
   tag.get_attribute_value("d_eq", d_eq);
   tag.get_attribute_value("d_max", d_max);
   tag.get_attribute_value("d_aero", d_aero);
+
+  scattering::ParticleProperties properties{
+      name, source, refractive_index, mass, d_eq, d_max, d_aero};
 
   tag.get_attribute_value("particle_type", particle_type_index);
   tag.get_attribute_value("data_format", data_format_index);
@@ -1637,13 +1641,14 @@ void xml_read_from_stream(istream& is_xml,
           to_eigen(absorption_vector),
           to_eigen(backward_scattering_coeff),
           to_eigen(forward_scattering_coeff)};
-      ssdata = ScatteringParticle({name, source, refractive_index},
+      ssdata = ScatteringParticle(properties,
                                   single_scattering_data);
+      break;
     }
     case scattering::DataFormat::Spectral: {
       Index l_max, m_max;
-      tag.get_attribute_value("l_max", l_max);
-      tag.get_attribute_value("m_max", m_max);
+      tag.get_attribute_value("l_max_scat", l_max);
+      tag.get_attribute_value("m_max_scat", m_max);
 
       Vector f_grid, t_grid, lon_inc_grid, lat_inc_grid;
       xml_read_from_stream(is_xml, f_grid, pbifs, verbosity);
@@ -1652,7 +1657,7 @@ void xml_read_from_stream(istream& is_xml,
       xml_read_from_stream(is_xml, lat_inc_grid, pbifs, verbosity);
 
       Tensor6 phase_matrix_real, phase_matrix_imag;
-      Tensor6 extinction_matrix, absorption_vector, backward_scattering_coeff,
+      Tensor7 extinction_matrix, absorption_vector, backward_scattering_coeff,
           forward_scattering_coeff;
 
       xml_read_from_stream(is_xml, phase_matrix_real, pbifs, verbosity);
@@ -1665,7 +1670,7 @@ void xml_read_from_stream(istream& is_xml,
       EigenComplexTensor<6> phase_matrix =
           EigenTensor<6>(to_eigen(phase_matrix_real))
               .cast<std::complex<double>>();
-      phase_matrix = 1.0i * EigenTensor<6>(to_eigen(phase_matrix_imag))
+      phase_matrix += 1.0i * EigenTensor<6>(to_eigen(phase_matrix_imag))
                                 .cast<std::complex<double>>();
 
       scattering::SingleScatteringData single_scattering_data{
@@ -1675,18 +1680,21 @@ void xml_read_from_stream(istream& is_xml,
           to_eigen(lat_inc_grid),
           scattering::sht::SHT(l_max, m_max),
           phase_matrix,
-          EigenTensor<6>(to_eigen(extinction_matrix))
+          EigenTensor<6>(to_eigen(extinction_matrix).chip<5>(0))
               .cast<std::complex<double>>(),
-          EigenTensor<6>(to_eigen(absorption_vector))
+          EigenTensor<6>(to_eigen(absorption_vector).chip<5>(0))
               .cast<std::complex<double>>(),
-          EigenTensor<6>(to_eigen(backward_scattering_coeff))
+          EigenTensor<6>(to_eigen(backward_scattering_coeff).chip<5>(0))
               .cast<std::complex<double>>(),
-          EigenTensor<6>(to_eigen(forward_scattering_coeff))
+          EigenTensor<6>(to_eigen(forward_scattering_coeff).chip<5>(0))
               .cast<std::complex<double>>()};
-      ssdata = ScatteringParticle({name, source, refractive_index},
+      ssdata = ScatteringParticle(properties,
                                   single_scattering_data);
+      break;
     }
   }
+  tag.read_from_stream(is_xml);
+  tag.check_name("/ScatteringParticle");
 }
 
 //! Writes ScatteringParticle to XML output stream
@@ -1711,6 +1719,7 @@ void xml_write_to_stream(ostream& os_xml,
   open_tag.add_attribute("name", particle.get_name());
   open_tag.add_attribute("source", particle.get_source());
   open_tag.add_attribute("refractive_index", particle.get_refractive_index());
+  open_tag.add_attribute("mass", particle.get_mass());
   open_tag.add_attribute("d_eq", particle.get_d_eq());
   open_tag.add_attribute("d_max", particle.get_d_max());
   open_tag.add_attribute("d_aero", particle.get_d_aero());

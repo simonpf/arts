@@ -26,14 +26,7 @@ import scipy as sp
 from pyarts.workspace.api import arts_api
 from pyarts.workspace.agendas import Agenda
 from pyarts.xml.names import tensor_names
-
-def _is_arts_class(value):
-    """
-    Determines whether a given value is a Python representation of a native
-    ARTS class by checking whether parent module provides a copy_to_wsv method.
-    """
-    value_module = sys.modules[value.__module__]
-    return hasattr(value_module, "copy_to_wsv")
+import pyarts.bindings as bindings
 
 def _is_xml_writable(value):
     """
@@ -43,7 +36,7 @@ def _is_xml_writable(value):
     return hasattr(value, 'write_xml') and type(value).__name__ in group_names
 
 def _is_copyable(value):
-    return _is_xml_writable(value) or _is_arts_class(value)
+    return _is_xml_writable(value) or bindings.has_bindings(value)
 
 class WorkspaceVariable:
     """
@@ -335,8 +328,18 @@ class WorkspaceVariable:
         if not v.initialized:
             raise Exception("WorkspaceVariable " + self.name + " is uninitialized.")
 
+        # Try using CXX bindings.
+        module = bindings.get_bindings_module_for_group(self.group)
+        if module:
+            return module.from_wsv(v.ptr)
+
         if self.group in arts_classes:
             cls = arts_classes[self.group]
+
+            if bindings.has_bindings(var):
+                value_module = sys.modules[value.__module__]
+                return value_module.from_wsv(v.ptr)
+
             if hasattr(cls, "__from_variable_value_struct__"):
                 return cls.__from_variable_value_struct__(v)
         if self.group == "Index":
@@ -431,6 +434,8 @@ class WorkspaceVariable:
         """
         from pyarts.xml import load
 
+        print("writing WSV.")
+
         if not self.ws:
             raise Exception("Cannot retrieve the value of a variable without "
                             + " associated Workspace.")
@@ -457,6 +462,7 @@ class WorkspaceVariable:
         if not self.ws:
             raise Exception("Cannot set the value of a variable without "
                             + " associated Workspace.")
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tfile = os.path.join(tmpdir, 'wsv.xml')
             save(var, tfile, format='binary')

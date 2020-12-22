@@ -45,7 +45,7 @@ add_custom_target(pyarts
   ALL
   COMMAND ${PYTHON_EXECUTABLE} setup.py build
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS arts_api cxx_bindings
+  DEPENDS arts_api cxx
   COMMENT "Building ARTS python package.")
 set(CONTROLFILE_DIR ${ARTS_SOURCE_DIR}/controlfiles)
 add_custom_target(python_tests

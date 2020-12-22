@@ -11,6 +11,8 @@ from os.path import isfile, join, basename, splitext, dirname
 
 from . import read
 from . import write
+from . import bindings
+from pyarts.bindings import has_bindings, get_class_for_group
 
 __all__ = [
     'load',
@@ -20,7 +22,6 @@ __all__ = [
     'make_binary',
     'make_directory_binary',
 ]
-
 
 def save(var, filename, precision='.7e', format='ascii', comment=None,
          parents=False):
@@ -46,6 +47,10 @@ def save(var, filename, precision='.7e', format='ascii', comment=None,
     """
     if parents:
         os.makedirs(dirname(filename), exist_ok=True)
+
+    if has_bindings(var):
+        bindings.save(var, filename)
+        return
 
     if filename.endswith('.gz'):
         if format != 'ascii':
@@ -104,13 +109,23 @@ def load(filename):
     else:
         xmlopen = open
 
+    value = bindings.load(filename)
+    if value:
+        return value
+
     binaryfilename = filename + '.bin'
     with xmlopen(filename, 'rb') as fp:
         if isfile(binaryfilename):
             with open(binaryfilename, 'rb',) as binaryfp:
-                return read.parse(fp, binaryfp).getroot().value()
+                root = read.parse(fp, binaryfp).getroot()
         else:
-            return read.parse(fp).getroot().value()
+            root = read.parse(fp).getroot()
+
+        binding_class = get_class_for_group(root.tag)
+        if bindings_class:
+            return bindings.load(binding_class, filename)
+
+    return root.value()
 
 
 def load_directory(directory, exclude=None):

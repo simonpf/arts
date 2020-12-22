@@ -11,6 +11,9 @@ import numpy as np
 
 from .names import dimension_names
 from .. import types
+from . import bindings
+from pyarts.bindings import get_bindings_module_for_group
+
 
 __all__ = ['parse']
 
@@ -169,6 +172,7 @@ class ARTSElement(ElementTree.Element):
                 return getattr(ARTSTypesLoadMultiplexer, self.tag)(self)
             except AttributeError:
                 raise RuntimeError('Unknown ARTS type {}'.format(self.tag))
+
 
 
 def parse(source, binaryfp=None):
