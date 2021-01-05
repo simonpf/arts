@@ -75,7 +75,7 @@ EigenTensor<7> extract_forward_scattering_coeff(
  * @param tensor ARTS phase matrix data.
  * @return Eigen tensor containing the phase matrix in scattering-compatible format.
  */
-EigenTensor<7> arts_to_scattering(const Tensor7 &tensor) {
+EigenTensor<7> from_legacy_format(const Tensor7 &tensor) {
     EigenTensor<7> tensor_eigen = to_eigen(tensor);
     std::array<Eigen::Index, 7> shuffle_dimensions = {0, 1, 5, 4, 3, 2, 6};
     EigenTensor<7> result = tensor_eigen.shuffle(shuffle_dimensions);
@@ -90,7 +90,7 @@ EigenTensor<7> arts_to_scattering(const Tensor7 &tensor) {
  * @param tensor The input data to convert.
  * @return Eigen tensor containing the data in scattering-compatible format.
  */
-EigenTensor<7> arts_to_scattering(const Tensor5 &tensor) {
+EigenTensor<7> from_legacy_format(const Tensor5 &tensor) {
   EigenTensor<5> tensor_eigen = to_eigen(tensor);
   auto result = scattering::eigen::unsqueeze<4, 5>(tensor_eigen);
   std::array<Eigen::Index, 7> shuffle_dimensions = {0, 1, 3, 2, 4, 5, 6};
@@ -102,7 +102,7 @@ EigenTensor<7> arts_to_scattering(const Tensor5 &tensor) {
  * @param arts_data SingleScatteringData object containing the scattering
  * data in legacy format.
  */
-scattering::SingleScatteringData arts_to_scattering(
+scattering::SingleScatteringData from_legacy_format(
     const SingleScatteringData &arts_data) {
   EigenVector f_grid = to_eigen(arts_data.f_grid);
   EigenVector t_grid = to_eigen(arts_data.T_grid);
@@ -114,9 +114,9 @@ scattering::SingleScatteringData arts_to_scattering(
   }
   EigenVector lat_scat = to_eigen(arts_data.za_grid);
   lat_scat *= (M_PI / 180.0);
-  auto phase_matrix = arts_to_scattering(arts_data.pha_mat_data);
-  auto extinction_matrix = arts_to_scattering(arts_data.ext_mat_data);
-  auto absorption_vector = arts_to_scattering(arts_data.abs_vec_data);
+  auto phase_matrix = from_legacy_format(arts_data.pha_mat_data);
+  auto extinction_matrix = from_legacy_format(arts_data.ext_mat_data);
+  auto absorption_vector = from_legacy_format(arts_data.abs_vec_data);
   auto backward_scattering_coeff =
       extract_backward_scattering_coeff(phase_matrix);
   auto forward_scattering_coeff =
@@ -245,7 +245,8 @@ ScatteringHabit::ScatteringHabit(
   EigenVector d_eq(n), d_max(n), mass(n);
 
   for (size_t i = 0; i < n; ++i) {
-    auto scattering_data = detail::arts_to_scattering(arts_scat_data[i]);
+
+    auto scattering_data = detail::from_legacy_format(arts_scat_data[i]);
     auto meta = meta_data[i];
     particles.emplace_back(meta.mass,
                            meta.diameter_volume_equ,

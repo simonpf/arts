@@ -26,8 +26,11 @@
 
   \brief Workspace methods for the manipulation of scattering_habit.
 */
+#include <filesystem>
+
 #include "scattering_habit.h"
 #include "microphysics.h"
+#include "xml_io.h"
 
 void scattering_habitGetParticleSizes(
     Vector& scat_species_x,
@@ -68,5 +71,63 @@ void scattering_habitGetParticleSizes(
                                   mass,
                                   x_fit_start,
                                   x_fit_end);
+  }
+}
+
+void scattering_particleReadFromLegacyFormat(
+    ScatteringParticle& out,
+    const String& single_scattering_data_file,
+    const String& scattering_meta_data_file,
+    const String& name,
+    const Verbosity& verbosity) {
+  SingleScatteringData scattering_data;
+  xml_read_from_file(single_scattering_data_file, scattering_data, verbosity);
+  ScatteringMetaData meta_data;
+  xml_read_from_file(scattering_meta_data_file, meta_data, verbosity);
+
+  scattering::ParticleProperties properties{
+      name,
+      meta_data.source,
+      meta_data.refr_index,
+      meta_data.mass,
+      meta_data.diameter_volume_equ,
+      meta_data.diameter_max,
+      meta_data.diameter_area_equ_aerodynamical};
+  out = ScatteringParticle(properties,
+                           detail::from_legacy_format(scattering_data));
+}
+
+void scattering_particlesReadFromLegacyFormat(
+    ArrayOfScatteringParticle& out,
+    const String& array_of_single_scattering_data_file,
+    const String& array_of_scattering_meta_data_file,
+    const String& name,
+    const Verbosity& verbosity) {
+  ArrayOfSingleScatteringData scattering_data;
+  xml_read_from_file(
+      array_of_single_scattering_data_file, scattering_data, verbosity);
+  ArrayOfScatteringMetaData meta_data;
+  xml_read_from_file(array_of_scattering_meta_data_file, meta_data, verbosity);
+
+  std::string particle_name = name;
+  if (particle_name == "") {
+    particle_name =
+        std::filesystem::path(
+            static_cast<std::string>(array_of_single_scattering_data_file))
+            .stem();
+  }
+  out = ArrayOfScatteringParticle();
+  for (Index i = 0; i < scattering_data.nelem(); ++i) {
+    auto m = meta_data[i];
+    scattering::ParticleProperties properties{
+        particle_name,
+        m.source,
+        m.refr_index,
+        m.mass,
+        m.diameter_volume_equ,
+        m.diameter_max,
+        m.diameter_area_equ_aerodynamical};
+    out.push_back(ScatteringParticle(
+        properties, detail::from_legacy_format(scattering_data[i])));
   }
 }

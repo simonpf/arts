@@ -330,15 +330,11 @@ class WorkspaceVariable:
 
         # Try using CXX bindings.
         module = bindings.get_bindings_module_for_group(self.group)
-        if module:
+        if module and hasattr(module, "from_wsv"):
             return module.from_wsv(v.ptr)
 
         if self.group in arts_classes:
             cls = arts_classes[self.group]
-
-            if bindings.has_bindings(var):
-                value_module = sys.modules[value.__module__]
-                return value_module.from_wsv(v.ptr)
 
             if hasattr(cls, "__from_variable_value_struct__"):
                 return cls.__from_variable_value_struct__(v)
@@ -433,8 +429,6 @@ class WorkspaceVariable:
             workspace.
         """
         from pyarts.xml import load
-
-        print("writing WSV.")
 
         if not self.ws:
             raise Exception("Cannot retrieve the value of a variable without "

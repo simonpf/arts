@@ -12,7 +12,7 @@ from os.path import isfile, join, basename, splitext, dirname
 from . import read
 from . import write
 from . import bindings
-from pyarts.bindings import has_bindings, get_class_for_group
+from pyarts.bindings import has_bindings, get_module_for_group
 
 __all__ = [
     'load',
@@ -118,14 +118,10 @@ def load(filename):
         if isfile(binaryfilename):
             with open(binaryfilename, 'rb',) as binaryfp:
                 root = read.parse(fp, binaryfp).getroot()
+                return root.value()
         else:
             root = read.parse(fp).getroot()
-
-        binding_class = get_class_for_group(root.tag)
-        if bindings_class:
-            return bindings.load(binding_class, filename)
-
-    return root.value()
+            return root.value()
 
 
 def load_directory(directory, exclude=None):

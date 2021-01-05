@@ -56,6 +56,21 @@ std::ostream &operator<<(std::ostream &out, const ScatteringParticle &);
 std::ostream &operator<<(std::ostream &out, const ArrayOfScatteringParticle &);
 
 ////////////////////////////////////////////////////////////////////////////////
+// Conversion from legacy data.
+////////////////////////////////////////////////////////////////////////////////
+
+/** Convert from legacy format to new scattering format.
+ *
+ * @param legacy_data The scattering data in legacy ARTS format to convert
+ * to the new format.
+ * @return SingleScatteringData object containing the single scattering data.
+ */
+namespace detail {
+scattering::SingleScatteringData from_legacy_format(
+    const SingleScatteringData &legacy_data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // ScatteringHabit
 ////////////////////////////////////////////////////////////////////////////////
 /** ScatteringHabit

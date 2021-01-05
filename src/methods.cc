@@ -15985,7 +15985,7 @@ void define_md_data_raw() {
                             GOUT_TYPE("ArrayOfScatteringParticle"),
                             GOUT_DESC("ArrayOfScatteringParticle containing scattering data read\n"
                                       "from all files in the directory."),
-                            IN(),
+                            IN("stokes_dim"),
                             GIN("path"),
                             GIN_TYPE("String"),
                             GIN_DEFAULT(NODEF),
@@ -16663,6 +16663,55 @@ void define_md_data_raw() {
                "A flag to deactivate calculation of a and b, to possibly "
                "save some time. The a and b parameters are then set to -1."
                "Default is to calculate a and b.")));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_particleReadFromLegacyFormat"),
+      DESCRIPTION(
+          "Read scattering data from ARTS legacy format."
+          "\n"
+          "Reads scattering data for a single scattering particle from\n"
+          "the legacy ARTS scattering format in which scattering data is\n"
+          "stored using SingleScatteringData and SingleScatteringMetaData\n"
+          "types.\n"),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("scattering_habit"),
+      GOUT_TYPE("ScatteringParticle"),
+      GOUT_DESC("The loaded scattering particle."),
+      IN(),
+      GIN("array_of_scattering_data_file",
+          "array_of_scattering_meta_data_file",
+          "name"),
+      GIN_TYPE("String", "String", "String"),
+      GIN_DEFAULT(NODEF, NODEF, ""),
+      GIN_DESC(
+          "Filename of ARTS XML file containing the SingleScatteringData to load.",
+          "Filename of ARTS XML file containing the SingleScatteringMetaData to load.",
+          "A name for the scattering habit. Defaults to filename.")));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_particlesReadFromLegacyFormat"),
+      DESCRIPTION(
+          "Read scattering data from ARTS legacy format."
+          "\n"
+          "Reads scattering data from the legacy ARTS scattering format \n"
+          "in which scattering data is stored using \n"
+          "ArrayOfSingleScatteringData and ArrayOfSingleScatteringMetaData\n"
+          "types.\n"
+          ),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("scattering_particles"),
+      GOUT_TYPE("ArrayOfScatteringParticle"),
+      GOUT_DESC("The loaded scattering particles."),
+      IN(),
+      GIN("array_of_scattering_data_file", "array_of_scattering_meta_data_file", "Name"),
+      GIN_TYPE("String", "String", "String"),
+      GIN_DEFAULT(NODEF, NODEF, ""),
+      GIN_DESC("Filename of ARTS XML file containing the ArrayOfSingleScatteringData to load.",
+               "Filename of ARTS XML file containing the ArrayOfSingleScatteringMetaData to load.",
+               "A name for the scattering habit. Defaults to filename.")));
+
 
   md_data_raw.push_back(create_mdrecord(
       NAME("scattering_speciesAddScatteringHabit"),

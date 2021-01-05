@@ -39,6 +39,7 @@ void scattering_particleReadFromARTSSSDB(ScatteringParticle &out,
 }
 
 void particle_habitReadFromARTSSSDB(ArrayOfScatteringParticle &out,
+                                    const Index &stokes_dim,
                                     const String &path,
                                     const Verbosity &verbosity) {
     auto habit_folder = scattering::arts_ssdb::HabitFolder(path);
@@ -46,7 +47,8 @@ void particle_habitReadFromARTSSSDB(ArrayOfScatteringParticle &out,
     out.resize(0);
     out.reserve(n_particles);
     for (auto iterator = habit_folder.begin(); iterator != habit_folder.end(); ++iterator) {
-        out.push_back((*iterator).to_particle());
+        auto particle = (*iterator).to_particle();
+        out.push_back(particle.set_stokes_dim(stokes_dim));
     }
 }
 

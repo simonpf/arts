@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 <arts version="1" format="ascii">
-<Array nelem="1" type="ArrayOfSingleScatteringData">
-<Array nelem="3" type="SingleScatteringData">
 <SingleScatteringData version="3">
 <String>"totally_random"</String>
 <String>"Liquid sphere"</String>
