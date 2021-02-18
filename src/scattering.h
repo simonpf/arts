@@ -80,9 +80,11 @@ struct ScatteringPropertiesSpec {
 
 /** BulkScatteringProperties
  *
- * The class represents the bulk scattering properties of an atmospheric parcel. It is the
- * result of calculating the scattering properties for a point in the atmosphere containing
- * a set of different scattering species.
+ * The class represents the bulk scattering properties of the atmosphere. It is the
+ * result of calculating the scattering properties all point in the atmosphere. The
+ * scattering data for each point in the atmospheric grid is represent by a
+ * SingleScatteringData object. The data for the whole grid is stored as a 1-dimensional
+ * array.
  */
 class BulkScatteringProperties {
  public:
@@ -94,18 +96,29 @@ class BulkScatteringProperties {
   BulkScatteringProperties(Array<scattering::SingleScatteringData> data)
       : data_(data),
         n_freqs_(data[0].get_f_grid().size()),
-        stokes_dim_(data[0].get_stokes_dim())
-        {}
+        stokes_dim_(data[0].get_stokes_dim()) {}
 
-  /** Extracts extinction coefficients from the extinction matrix.
+  /** Extracts extinction coefficients from bulk properties.
    *
-   * @return (n_f x n_p) matrix containing the extinction coefficients
-   * for the n_f frequencies and n_p points in the atmosphere.
+   * @return Tensor4 with dimensions [n_layers, n_freqs, n_lon_inc, n_lat_inc]
+   * containing the extinction coefficient for all layers in the atmosphere,
+   * frequencies in f_grid, and incoming azimuth and zenith angles.
    */
-  Matrix get_extinction_coefficients() const;
+  Tensor4 get_extinction_coeff() const;
+
+  /** Extracts extinction matrices from bulk properties.
+   *
+   * @return Tensor6 with dimensions
+   * [n_layers, n_freqs, n_lon_inc, n_lat_inc, n_stokes, n_stokes]
+   * containing the extinction matrices for all layers in the atmosphere,
+   * frequencies in f_grid, and incoming azimuth and zenith angles.
+   */
   Tensor6 get_extinction_matrix() const;
+  Tensor6 get_extinction_matrix(Index stokes_dim) const;
 
   /** Extracts absorption coefficients from bulk properties.
+   *
+   * @note Note that extracting the extinction matrix
    *
    * @return Tensor5 with dimensions [n_layers, n_freqs, n_lon_inc]
    * containing the absorption coefficient for all layers in the atmosphere,
@@ -115,21 +128,31 @@ class BulkScatteringProperties {
 
   /** Extracts absorption vector from bulk properties.
    *
-   * @return Tensor5 with dimensions [n_layers, n_freqs, n_lon_inc, stokes_dim]
+   * @return Tensor5 with dimensions [n_layers, n_freqs, n_lon_inc, stokes]
    * containing the absorption vector for all layers in the atmosphere,
    * frequencies in f_grid, incoming azimuth and zenith angles and the stokes
    * components.
    */
   Tensor5 get_absorption_vector() const;
+  Tensor5 get_absorption_vector(Index stokes_dim) const;
 
   /** Get spectral coefficients.
-   * @return Tensor3 containing the spectral coefficients along
+   *
+   * Return spectral components of SHT-transformed scattering matrix computed
+   * using orthonormal basis functions.
+   *
+   * @return Tensor5 containing the spectral SHT coefficients along
    * column, the atmospheric layers along rows and the frquencies along
    * the pages.
    */
-  Tensor3 get_spectral_coefficients() const;
+  Tensor5 get_spectral_coeffs() const;
 
-  Tensor3 get_legendre_coefficients() const;
+  /** Get Legendre coefficients.
+   * @return Tensor5 containing Legendre  coefficients along
+   * column, the atmospheric layers along rows and the frquencies along
+   * the pages.
+   */
+  Tensor5 get_legendre_coeffs() const;
 
   /** Get phase function.
    * @return Tensor3 containing the phase functions elements along
@@ -138,7 +161,8 @@ class BulkScatteringProperties {
    */
   Tensor3 get_phase_matrix() const;
 
-  Tensor6 get_scattering_matrix() const;
+  Tensor7 get_scattering_matrix() const;
+  Tensor7 get_scattering_matrix(Index stokes_dim) const;
 
   BulkScatteringProperties &operator+=(const BulkScatteringProperties &other) {
     for (Index i = 0; i < data_.size(); ++i) {
@@ -147,28 +171,56 @@ class BulkScatteringProperties {
     return *this;
   }
 
+  /** Normalize phase matrix data.
+   *
+   * Normalizes the scattering-angle integral of phase matrix to the
+   * given value.
+   *
+   * @param norm The desired integral of the phase matrix.
+   */
+  void normalize(Numeric norm) {
+    for (auto &d : data_) {
+      d.normalize(norm);
+    }
+  }
+
+  void downsample_lon_scat(const Vector &lon_scat) {
+    auto lon_scat_ptr = std::make_shared<EigenVector>(to_eigen(lon_scat));
+    for (Index i = 0; i < data_.size(); ++i) {
+      data_[i] = data_[i].downsample_lon_scat(lon_scat_ptr);
+    }
+  }
+
  private:
   Array<scattering::SingleScatteringData> data_;
   Index n_freqs_;
   Index stokes_dim_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Abstract interface
+////////////////////////////////////////////////////////////////////////////////
+
+/** Abstract interface for scattering species representations.
+ *
+ * This abstract class defines the generic interface that all 
+ *
+ */
 class ScatteringSpeciesImpl {
 public:
-    virtual ~ScatteringSpeciesImpl() {};
-    ScatteringSpeciesImpl() {};
+    virtual ~ScatteringSpeciesImpl(){};
+    ScatteringSpeciesImpl(){};
     ScatteringSpeciesImpl(const ScatteringSpeciesImpl &) = default;
 
-
-    virtual std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(ScatteringPropertiesSpec specs) const = 0;
-    virtual BulkScatteringProperties calculate_bulk_properties(Workspace &ws,
-                                                               ConstMatrixView pbp_field,
-                                                               const ArrayOfString &pbf_names,
-                                                               ConstVectorView temperature,
-                                                               const ArrayOfRetrievalQuantity &jacobian_quantities,
-                                                               bool jacobian_do) const = 0;
-
+    virtual std::shared_ptr<ScatteringSpeciesImpl> prepare_scattering_data(
+        ScatteringPropertiesSpec specs) const = 0;
+    virtual BulkScatteringProperties calculate_bulk_properties(
+        Workspace &ws,
+        ConstMatrixView pbp_field,
+        const ArrayOfString &pbf_names,
+        ConstVectorView temperature,
+        const ArrayOfRetrievalQuantity &jacobian_quantities,
+        bool jacobian_do) const = 0;
 };
-
 
 #endif

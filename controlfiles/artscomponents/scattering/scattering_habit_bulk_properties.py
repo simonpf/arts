@@ -30,20 +30,20 @@ ws.VectorSet(ws.za_grid, np.array([0.0]))
 ws.ReadXML(ws.scat_data_raw, "test_data/scat_data.xml")
 ws.ReadXML(ws.scat_meta, "test_data/scat_meta.xml")
 
-## Rain
-#@arts_agenda
-#def psd_agenda_rain(ws):
-#    ws.scattering_habitGetParticleSizes(x_unit="dveq")
-#    ws.Copy(ws.psd_size_grid, ws.scat_species_x)
-#    ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
-#    ws.psdWangEtAl16(t_min=273, t_max=999.0)
-#    ws.pndFromPsdBasic()
-#
-#ws.scattering_speciesAddScatteringHabit(name="rain",
-#                                        scattering_data=ws.scat_data_raw.value[0],
-#                                        scattering_meta_data=ws.scat_meta.value[0],
-#                                        psd_agenda=psd_agenda_rain,
-#                                        pnd_agenda_input=["RWC"])
+#Rain
+@arts_agenda
+def psd_agenda_rain(ws):
+   ws.scattering_habitGetParticleSizes(x_unit="dveq")
+   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
+   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
+   ws.psdWangEtAl16(t_min=273, t_max=999.0)
+   ws.pndFromPsdBasic()
+
+ws.scattering_speciesAddScatteringHabit(name="rain",
+                                       scattering_data=ws.scat_data_raw.value[0],
+                                       scattering_meta_data=ws.scat_meta.value[0],
+                                       psd_agenda=psd_agenda_rain,
+                                       pnd_agenda_input=["RWC"])
 
 # ICE
 @arts_agenda
@@ -64,14 +64,115 @@ ws.scattering_speciesAddScatteringHabit(name="ice",
 # Calculate bulk properties.
 #
 
+# Absorption coefficient
 ws.Tensor6Create("absorption_coeff")
 ws.scattering_speciesCalcBulkAbsorptionCoeff(bulk_absorption_coeff=ws.absorption_coeff)
-#ws.Tensor6Create("absorption_coeff_ref")
-#ws.ReadXML(out=ws.absorption_coeff_)
 ws.MatrixCreate("absorption_coeff_ref")
 ws.ReadXML(out=ws.absorption_coeff_ref, filename="bulk_absorption_stokes_1.xml")
 
+absorption_coeff = ws.absorption_coeff.value[:, 0, 0, :, 0, 0]
+absorption_coeff_ref = ws.absorption_coeff_ref.value
+assert np.all(np.isclose(absorption_coeff, absorption_coeff_ref.T))
 
-ac = ws.absorption_coeff.value[:, 0, 0, :, 0, 0]
+# Extinction coefficient
+ws.Tensor6Create("extinction_coeff")
+ws.scattering_speciesCalcBulkExtinctionCoeff(bulk_extinction_coeff=ws.extinction_coeff)
+ws.MatrixCreate("extinction_coeff_ref")
+ws.ReadXML(out=ws.absorption_coeff_ref, filename="bulk_extinction_stokes_1.xml")
 
-ac_ref = ws.absorption_coeff_ref.value
+extinction_coeff = ws.extinction_coeff.value[:, 0, 0, :, 0, 0]
+extinction_coeff_ref = ws.absorption_coeff_ref.value
+assert np.all(np.isclose(extinction_coeff, extinction_coeff_ref.T))
+
+# Legendre coefficients
+
+ws.Tensor7Create("legendre_coeffs")
+ws.scattering_speciesCalcPhaseFunctionLegendreCoeffs(legendre_coeffs=ws.legendre_coeffs,
+                                                     n_coeffs=9)
+ws.Tensor3Create("legendre_coeffs_ref")
+ws.ReadXML(out=ws.legendre_coeffs_ref, filename="legendre_coeffs.xml")
+
+legendre_coeffs = ws.legendre_coeffs.value[:, 0, 0, :, 0, 0]
+legendre_coeffs = 0.5  * (legendre_coeffs[1:] + legendre_coeffs[:-1])
+legendre_coeffs = legendre_coeffs[::-1]
+legendre_coeffs /= legendre_coeffs[:, :, [0]]
+legendre_coeffs = np.nan_to_num(legendre_coeffs, nan=0.0)
+
+legendre_coeffs_ref = np.transpose(ws.legendre_coeffs_ref.value, [1, 0, 2])
+assert np.all(np.isclose(legendre_coeffs, legendre_coeffs_ref, atol=0.2))
+
+# Absorption vector
+
+ws.stokes_dim = 1
+ws.Tensor7Create("absorption_vector")
+ws.scattering_speciesCalcAbsorptionVector(bulk_absorption_vector=ws.absorption_vector)
+absorption_vector = ws.absorption_vector.value[:, 0, 0, -1, 0, 0, 0]
+absorption_vector = 0.5 * (absorption_vector[1:] + absorption_vector[:-1])
+ws.Tensor5Create("absorption_vector_ref")
+ws.ReadXML(out=ws.absorption_vector_ref, filename="absorption_vector_stokes_1.xml")
+absorption_vector_ref = ws.absorption_vector_ref.value[0, :, 0, 0, 0]
+assert np.all(np.isclose(absorption_vector, absorption_vector_ref))
+
+ws.stokes_dim = 2
+ws.scattering_speciesCalcAbsorptionVector(bulk_absorption_vector=ws.absorption_vector)
+absorption_vector = ws.absorption_vector.value[:, 0, 0, -1, 0, 0, :]
+absorption_vector = 0.5 * (absorption_vector[1:] + absorption_vector[:-1])
+ws.Tensor5Create("absorption_vector_ref")
+ws.ReadXML(out=ws.absorption_vector_ref, filename="absorption_vector_stokes_2.xml")
+absorption_vector_ref = ws.absorption_vector_ref.value[0, :, 0, 0, :]
+assert np.all(np.isclose(absorption_vector, absorption_vector_ref))
+# Extinction matrix
+
+ws.stokes_dim = 1
+ws.Tensor7Create("extinction_matrix")
+ws.scattering_speciesCalcExtinctionMatrix(bulk_extinction_matrix=ws.extinction_matrix)
+extinction_matrix = ws.extinction_matrix.value[:, 0, 0, -1, 0, 0, 0]
+extinction_matrix = 0.5 * (extinction_matrix[1:] + extinction_matrix[:-1])
+ws.Tensor6Create("extinction_matrix_ref")
+ws.ReadXML(out=ws.extinction_matrix_ref, filename="extinction_matrices_stokes_1.xml")
+extinction_matrix_ref = ws.extinction_matrix_ref.value[0, :, 0, 0, 0, 0]
+assert np.all(np.isclose(extinction_matrix, extinction_matrix_ref))
+
+ws.stokes_dim = 2
+ws.scattering_speciesCalcExtinctionMatrix(bulk_extinction_matrix=ws.extinction_matrix)
+extinction_matrix = ws.extinction_matrix.value[:, 0, 0, -1, 0, 0, :]
+extinction_matrix = 0.5 * (extinction_matrix[1:] + extinction_matrix[:-1])
+extinction_matrix = extinction_matrix.reshape(-1, 2, 2)
+ws.ReadXML(out=ws.extinction_matrix_ref, filename="extinction_matrices_stokes_2.xml")
+extinction_matrix_ref = ws.extinction_matrix_ref.value[0, :, 0, 0, :]
+assert np.all(np.isclose(extinction_matrix, extinction_matrix_ref))
+
+ws.Tensor6Create("extinction_matrix_ref")
+ws.ReadXML(out=ws.extinction_matrix_ref, filename="extinction_matrices_stokes_1.xml")
+
+scattering_coeff = extinction_matrix[..., 0, 0] - absorption_vector[..., 0]
+
+# Scattering matrix
+
+ws.ReadXML(ws.za_grid, "za_grid.xml")
+
+ws.stokes_dim = 1
+ws.Tensor7Create("scattering_matrix")
+ws.scattering_speciesCalcScatteringMatrix(bulk_scattering_matrix=ws.scattering_matrix)
+scattering_matrix = ws.scattering_matrix.value[:, -1, :, 0, :, :, 0]
+n_mu = scattering_matrix.shape[1]  // 2
+scattering_matrix = scattering_matrix[:, n_mu-1::-1, n_mu-1::-1]
+scattering_matrix = 0.5 * (scattering_matrix[1:] + scattering_matrix[:-1])
+scattering_matrix *= scattering_coeff.reshape(-1, 1, 1, 1)
+
+ws.Tensor6Create("scattering_matrix_ref")
+ws.ReadXML(out=ws.scattering_matrix_ref, filename="scattering_matrices_stokes_1.xml")
+scattering_matrix_ref = ws.scattering_matrix_ref.value[:, 0, :, 0, :,]
+assert np.all(np.isclose(scattering_matrix, scattering_matrix_ref))
+
+ws.stokes_dim = 2
+ws.scattering_speciesCalcExtinctionMatrix(bulk_extinction_matrix=ws.extinction_matrix)
+extinction_matrix = ws.extinction_matrix.value[:, 0, 0, -1, 0, 0, :]
+extinction_matrix = 0.5 * (extinction_matrix[1:] + extinction_matrix[:-1])
+extinction_matrix = extinction_matrix.reshape(-1, 2, 2)
+ws.ReadXML(out=ws.extinction_matrix_ref, filename="extinction_matrices_stokes_2.xml")
+extinction_matrix_ref = ws.extinction_matrix_ref.value[0, :, 0, 0, :]
+assert np.all(np.isclose(extinction_matrix, extinction_matrix_ref))
+
+ws.Tensor6Create("extinction_matrix_ref")
+ws.ReadXML(out=ws.extinction_matrix_ref, filename="extinction_matrices_stokes_1.xml")

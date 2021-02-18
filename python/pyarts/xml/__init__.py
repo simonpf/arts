@@ -12,7 +12,7 @@ from os.path import isfile, join, basename, splitext, dirname
 from . import read
 from . import write
 from . import bindings
-from pyarts.bindings import has_bindings, get_module_for_group
+from pyarts.bindings import has_bindings
 
 __all__ = [
     'load',

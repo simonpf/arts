@@ -817,28 +817,6 @@ void run_cdisort(Workspace& ws,
                 pnd_profiles,
                 cloudbox_limits);
 
-  xml_write_to_file("p_profile.xml",
-                    p,
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
-  xml_write_to_file("z_profile.xml",
-                    z,
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
-  xml_write_to_file("t_profile.xml",
-                    t,
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
-  xml_write_to_file("pbf_profiles.xml",
-                    pbf,
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
-
-
   disort_state ds;
   disort_output out;
 
@@ -914,7 +892,7 @@ void run_cdisort(Workspace& ws,
                                             1,
                                             Nlegendre - 1,
                                             0,
- 4.0 * M_PI);
+                                            4.0 * M_PI);
   //ScatteringPropertiesSpec scattering_specs(f_grid, 1, lon_scat, lat_scat, 8.0 * M_PI);
   auto scattering_species_prepd = scattering_species.prepare_scattering_data(scattering_specs);
   auto bulk_properties = scattering_species_prepd.calculate_bulk_properties(ws,
@@ -923,36 +901,15 @@ void run_cdisort(Workspace& ws,
                                                                             t,
                                                                             {},
                                                                             false);
-  auto extinction = bulk_properties.get_extinction_coefficients();
-  auto absorption = bulk_properties.get_absorption_coeff()(joker, joker, 0, 0);
-
-
-  xml_write_to_file("bulk_absorption_stokes_1.xml",
-                    abs_bulk_par,
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
-
-  xml_write_to_file("bulk_extinction_stokes_1.xml",
-                    ext_bulk_par,
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
-
-  std::cout << "ABS :: " << std::endl;
-  std::cout << extinction << std::endl;
-
-  std::cout << "ABS REF :: " << std::endl;
-  std::cout << ext_bulk_par << std::endl;
-
-
-
+  auto extinction = bulk_properties.get_extinction_coeff();
+  auto absorption = bulk_properties.get_absorption_coeff();
 
   // Optical depth of layers
   Matrix dtauc(nf, ds.nlyr);
   // Single scattering albedo of layers
   Matrix ssalb(nf, ds.nlyr);
   get_dtauc_ssalb(dtauc, ssalb, ext_bulk_gas, ext_bulk_par, abs_bulk_par, z);
+  //get_dtauc_ssalb(dtauc, ssalb, ext_bulk_gas, extinction, absorption, z);
 
   // Transform to mu, starting with negative values
   for (Index i = 0; i < ds.numu; i++) ds.umu[i] = -cos(za_grid[i] * PI / 180);
@@ -989,15 +946,10 @@ void run_cdisort(Workspace& ws,
   Tensor3 pfct_bulk_par(nf_ssd, ds.nlyr, nang);
   get_pfct(pfct_bulk_par, pha_bulk_par, ext_bulk_par, abs_bulk_par, cboxlims);
 
-  auto coeffs = average_and_invert(bulk_properties.get_legendre_coefficients());
+  auto legendre_coeffs = bulk_properties.get_legendre_coeffs();
+  auto coeffs_avg = average_and_invert(legendre_coeffs(joker, joker, 0, 0, joker));
   Tensor3 pmom(nf_ssd, ds.nlyr, Nlegendre);
   get_pmom(pmom, pfct_bulk_par, pfct_angs, Nlegendre);
-
-  xml_write_to_file("phase_matrix_moments.xml",
-                    bulk_properties.get_legendre_coefficients(),
-                    FileType::FILE_TYPE_BINARY,
-                    0,
-                    verbosity);
 
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
     sprintf(ds.header, "ARTS Calc f_index = %ld", f_index);
@@ -1017,8 +969,9 @@ void run_cdisort(Workspace& ws,
     ds.bc.albedo = surface_scalar_reflectivity[f_index];
 
     std::memcpy(ds.pmom,
-                pmom(f_index, joker, joker).get_c_array(),
-                sizeof(Numeric) * coeffs.nrows() * coeffs.ncols());
+                //pmom(f_index, joker, joker).get_c_array(),
+                coeffs_avg(f_index, joker, joker).get_c_array(),
+                sizeof(Numeric) * coeffs_avg.nrows() * coeffs_avg.ncols());
 
     c_disort(&ds, &out);
 

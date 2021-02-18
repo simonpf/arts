@@ -313,7 +313,7 @@ std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(
     scattering::ParticleHabit formatted = particle_model_->set_stokes_dim(specs.n_stokes);
 
     if (specs.frame == ReferenceFrame::Lab) {
-        Index n = specs.lat_scat.nelem();
+        Index n = 37 * 2 - 1; //specs.lat_scat.nelem();
         EigenVector lon_scat(n);
         Numeric dx = 2.0 * M_PI / static_cast<Numeric>(n - 1);
         lon_scat[0] = 0.0;
@@ -342,7 +342,6 @@ std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(
 
     auto new_model = std::make_shared<scattering::ParticleHabit>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
     auto result = std::make_shared<ScatteringHabit>(name_, pnd_agenda_, pnd_agenda_input_, new_model);
-    result->set_phase_function_norm(specs.phase_function_norm);
     return result;
 }
 
@@ -371,12 +370,11 @@ BulkScatteringProperties ScatteringHabit::calculate_bulk_properties(
                     pnd_agenda_);
 
   auto n_levels = pnd_data.nrows();
-  std::cout << "Number densities: " << pnd_data << std::endl;
   Array<scattering::SingleScatteringData> bulk_properties(n_levels);
   for (Index i = 0; i < n_levels; ++i) {
       EigenVector number_densities = to_eigen(pnd_data(i, joker));
     bulk_properties[i] = particle_model_->calculate_bulk_properties(
-        temperature[i], number_densities, phase_function_norm_);
+        temperature[i], number_densities);
   }
 
   return BulkScatteringProperties(bulk_properties);

@@ -153,8 +153,6 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
     return to_arts(particle_model_->get_d_max());
   }
 
-  void set_phase_function_norm(Numeric norm) { phase_function_norm_ = norm; }
-
   /** Calculate bulk scattering properties for 1D atmosphere.
    *
    * @param pbp_field Matrix view containing the particle bulk properties for
@@ -180,7 +178,6 @@ class ScatteringHabit : public ScatteringSpeciesImpl {
   String name_;
   Agenda pnd_agenda_;
   ArrayOfString pnd_agenda_input_;
-  Numeric phase_function_norm_ = 1.0;
   std::shared_ptr<scattering::ParticleHabit> particle_model_;
 };
 

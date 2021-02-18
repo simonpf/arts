@@ -57,42 +57,41 @@ ws.ReadXML(ws.particle_bulkprop_names, "test_data/particle_bulkprop_names")
 #ws.ReadXML(ws.scat_meta, "test_data/scat_meta.xml")
 
 ws.ReadXML(ws.scat_data_raw, "test_data/scat_data.xml")
-ws.scat_data_raw = ws.scat_data_raw.value[1:]
+#ws.scat_data_raw = ws.scat_data_raw.value[1:]
 ws.ReadXML(ws.scat_meta, "test_data/scat_meta.xml")
-ws.scat_meta = ws.scat_meta.value[1:]
+#ws.scat_meta = ws.scat_meta.value[1:]
 
 ws.StringCreate("species_id_string")
 
 
-## Scat species 0
-#ws.StringSet(ws.species_id_string, "RWC")
-#ws.ArrayOfStringSet(ws.pnd_agenda_input_names, ['RWC'])
-#@arts_agenda
-#def pnd_agenda_array(ws):
-#    ws.ScatSpeciesSizeMassInfo(species_index=ws.agenda_array_index, x_unit="dveq")
-#    ws.Copy(ws.psd_size_grid, ws.scat_species_x)
-#    ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
-#    ws.psdWangEtAl16(t_min=273.0, t_max=999.0)
-#    ws.pndFromPsdBasic()
-#ws.Append(ws.pnd_agenda_array, pnd_agenda_array)
-#ws.Append(ws.scat_species, ws.species_id_string)
-#ws.Append(ws.pnd_agenda_array_input_names, ws.pnd_agenda_input_names)
-#
-#@arts_agenda
-#def psd_agenda(ws):
-#    ws.scattering_habitGetParticleSizes(x_unit="dveq")
-#    ws.Copy(ws.psd_size_grid, ws.scat_species_x)
-#    ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
-#    ws.psdWangEtAl16(t_min=273, t_max=999.0)
-#    ws.pndFromPsdBasic()
-#
-#ws.verbositySet(agenda=3, screen=3, file=3)
-#ws.scattering_speciesAddScatteringHabit(name="rain",
-#                                        scattering_data=ws.scat_data_raw.value[0],
-#                                        scattering_meta_data=ws.scat_meta.value[0],
-#                                        psd_agenda=psd_agenda,
-#                                        pnd_agenda_input=["RWC"])
-# 
+# Scat species 0
+ws.StringSet(ws.species_id_string, "RWC")
+ws.ArrayOfStringSet(ws.pnd_agenda_input_names, ['RWC'])
+@arts_agenda
+def pnd_agenda_array(ws):
+   ws.ScatSpeciesSizeMassInfo(species_index=ws.agenda_array_index, x_unit="dveq")
+   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
+   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
+   ws.psdWangEtAl16(t_min=273.0, t_max=999.0)
+   ws.pndFromPsdBasic()
+ws.Append(ws.pnd_agenda_array, pnd_agenda_array)
+ws.Append(ws.scat_species, ws.species_id_string)
+ws.Append(ws.pnd_agenda_array_input_names, ws.pnd_agenda_input_names)
+
+@arts_agenda
+def psd_agenda(ws):
+   ws.scattering_habitGetParticleSizes(x_unit="dveq")
+   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
+   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
+   ws.psdWangEtAl16(t_min=273, t_max=999.0)
+   ws.pndFromPsdBasic()
+
+ws.scattering_speciesAddScatteringHabit(name="rain",
+                                       scattering_data=ws.scat_data_raw.value[0],
+                                       scattering_meta_data=ws.scat_meta.value[0],
+                                       psd_agenda=psd_agenda,
+                                       pnd_agenda_input=["RWC"])
+
 
 # Scat species 1
 ws.StringSet(ws.species_id_string, "IWC")
@@ -189,6 +188,7 @@ ws.DOAngularGridsSet(N_za_grid=38, N_aa_grid=37)
 
 ws.DisortCalc( pfct_method = "interpolate", nstreams=8)
 ws.yCalc( y=ws.y_disort )
+#save(ws.y_disort.value, "y_disort.xml", format="binary")
 
 
 #
@@ -206,8 +206,6 @@ ws.yCalc( y=ws.y_disort )
 #ws.yCalc( y = y_rt4 )
 #ws.Copy( ws.za_grid, ws.za_grid_copy )
 #ws.Copy( ws.aa_grid, ws.aa_grid_copy )
-y = ws.y.value
-save(y, "y_disort.xml", format="binary")
 
 
 #scat_data = [ws.scat_data_raw.value[0]]

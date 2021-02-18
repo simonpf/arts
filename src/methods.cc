@@ -16757,9 +16757,149 @@ void define_md_data_raw() {
       OUT(),
       GOUT("bulk_absorption_coeff"),
       GOUT_TYPE("Tensor6"),
-      GOUT_DESC("Rank-6 tensor containing the bulk-absorption coefficients."),
+      GOUT_DESC("Rank-6 tensor containing the bulk absorption coefficients."),
       IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
          "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
+      GIN(),
+      GIN_TYPE(),
+      GIN_DEFAULT(),
+      GIN_DESC(),
+      SETMETHOD(false),
+      AGENDAMETHOD(false),
+      USES_TEMPLATES(false),
+      PASSWORKSPACE(true)));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesCalcBulkExtinctionCoeff"),
+      DESCRIPTION(
+          "Calculate the bulk extinction coefficient of the scattering species. "
+          "\n"
+          "The returned tensor has dimensions\n"
+          "[lon_grid, lat_grid, p_grid, f_grid, aa_grid, za_grid] and contains the\n"
+          "bulk extinction coefficient for each grid point, frequency and azimuth\n"
+          "and zenith incoming angles.\n"
+          ),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("bulk_extinction_coeff"),
+      GOUT_TYPE("Tensor6"),
+      GOUT_DESC("Rank-6 tensor containing the bulk extinction coefficients."),
+      IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
+         "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
+      GIN(),
+      GIN_TYPE(),
+      GIN_DEFAULT(),
+      GIN_DESC(),
+      SETMETHOD(false),
+      AGENDAMETHOD(false),
+      USES_TEMPLATES(false),
+      PASSWORKSPACE(true)));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesCalcPhaseFunctionLegendreCoeffs"),
+      DESCRIPTION(
+          "Calculate the Legendre coefficients of the bulk phase function."
+          "\n"
+          "The returned tensor has dimensions\n"
+          "[lon_grid, lat_grid, p_grid, f_grid, aa_grid, za_grid, n_coeffs] and contains the\n"
+          "bulk Legendre coefficients for each grid point, frequency and azimuth\n"
+          "and zenith incoming angles.\n"
+          ),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("legendre_coeffs"),
+      GOUT_TYPE("Tensor7"),
+      GOUT_DESC("Rank-7 tensor containing the Legendre coeffs of the bulk phase function."),
+      IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
+         "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
+      GIN("n_coeffs"),
+      GIN_TYPE("Index"),
+      GIN_DEFAULT(NODEF),
+      GIN_DESC("The number of Legendre coefficients to calculate."),
+      SETMETHOD(false),
+      AGENDAMETHOD(false),
+      USES_TEMPLATES(false),
+      PASSWORKSPACE(true)));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesCalcAbsorptionVector"),
+      DESCRIPTION(
+          "Calculate the bulk absorption vector."
+          "\n"
+          "Dimensions of the returned tensor correspond to\n"
+          "[lon_grid, lat_grid, p_grid, f_grid, aa_grid, za_grid, n_stokes] and contains the\n"
+          "bulk absorption vector for each grid point, frequency and incoming azimuth\n"
+          "and zenith angles.\n"
+          ),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("bulk_absorption_vector"),
+      GOUT_TYPE("Tensor7"),
+      GOUT_DESC("Rank-7 tensor containing the bulk absorption vector."),
+      IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
+         "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
+      GIN(),
+      GIN_TYPE(),
+      GIN_DEFAULT(),
+      GIN_DESC(),
+      SETMETHOD(false),
+      AGENDAMETHOD(false),
+      USES_TEMPLATES(false),
+      PASSWORKSPACE(true)));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesCalcExtinctionMatrix"),
+      DESCRIPTION(
+          "Calculate the bulk extinction matrix."
+          "\n"
+          "Dimensions of the returned tensor correspond to\n"
+          "[lon_grid, lat_grid, p_grid, f_grid, aa_grid, za_grid, n_stokes ** 2]. The \n"
+          "tensor contains the bulk extinction matrix components for each grid point, frequency\n"
+          "and incoming azimuth and zenith angles.\n"),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("bulk_extinction_matrix"),
+      GOUT_TYPE("Tensor7"),
+      GOUT_DESC("Rank-7 tensor to store the bulk extinction matrix to."),
+      IN("f_grid",
+         "particle_bulkprop_field",
+         "particle_bulkprop_names",
+         "scattering_species",
+         "stokes_dim",
+         "t_field",
+         "aa_grid",
+         "za_grid"),
+      GIN(),
+      GIN_TYPE(),
+      GIN_DEFAULT(),
+      GIN_DESC(),
+      SETMETHOD(false),
+      AGENDAMETHOD(false),
+      USES_TEMPLATES(false),
+      PASSWORKSPACE(true)));
+
+  md_data_raw.push_back(create_mdrecord(
+      NAME("scattering_speciesCalcScatteringMatrix"),
+      DESCRIPTION(
+          "Calculate the bulk scattering matrix."
+          "\n"
+          "Dimensions of the returned tensor correspond to\n"
+          "[grid_points, f_grid, za_grid_inc, aa_grid_scat, za_grid_scat, n_stokes, n_stokes]. The \n"
+          "tensor contains the bulk scattering matrix components for each grid point, frequency\n"
+          "and incoming azimuth and zenith angles.\n"),
+      AUTHORS("Simon Pfreundschuh"),
+      OUT(),
+      GOUT("bulk_scattering_matrix"),
+      GOUT_TYPE("Tensor7"),
+      GOUT_DESC("Rank-7 tensor to store the bulk scattering matrix to."),
+      IN("f_grid",
+         "particle_bulkprop_field",
+         "particle_bulkprop_names",
+         "scattering_species",
+         "stokes_dim",
+         "t_field",
+         "aa_grid",
+         "za_grid"),
       GIN(),
       GIN_TYPE(),
       GIN_DEFAULT(),
