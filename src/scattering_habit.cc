@@ -311,6 +311,7 @@ Matrix ScatteringHabit::get_agenda_input(Matrix pbp_field,
 std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(ScatteringPropertiesSpec specs) const {
 
     scattering::ParticleHabit formatted = particle_model_->set_stokes_dim(specs.n_stokes);
+    std::cout << "prepping. " << std::endl;
 
     if (specs.frame == ReferenceFrame::Lab) {
         Index n = 37 * 2 - 1; //specs.lat_scat.nelem();
@@ -320,27 +321,32 @@ std::shared_ptr<ScatteringSpeciesImpl> ScatteringHabit::prepare_scattering_data(
         for (Index i = 1; i < n; ++i) {
             lon_scat[i] = lon_scat[i - 1] + dx;
         }
-        formatted = formatted.to_lab_frame(to_eigen(specs.lat_inc),
-                                           lon_scat,
-                                           to_eigen(specs.lat_scat),
+
+        std::cout << "prepping 2: " << *specs.lat_inc << " / " << *specs.lat_scat << " / " << specs.n_stokes << std::endl;
+        formatted = formatted.to_lab_frame(specs.lat_inc,
+                                           std::make_shared<EigenVector>(lon_scat),
+                                           specs.lat_scat,
                                            specs.n_stokes);
+        std::cout << "prepping. " << std::endl;
     }
 
+    std::cout << "prepping. " << std::endl;
     if (specs.format == Format::Spectral) {
         // Data must be regridded to ensure conformity with grids expected
         // by SHT transform.
         formatted = formatted.regrid().to_spectral(specs.l_max, specs.m_max);
     } else {
-        formatted = formatted.downsample_scattering_angles(to_eigen(specs.lon_scat),
-                                                           to_eigen(specs.lat_scat));
-        formatted = formatted.to_gridded(to_eigen(specs.lon_inc),
-                                         to_eigen(specs.lat_inc),
-                                         to_eigen(specs.lon_scat),
-                                         to_eigen(specs.lat_scat));
-
+        formatted = formatted.downsample_scattering_angles(specs.lon_scat,
+                                                           specs.lat_scat);
+        formatted = formatted.to_gridded(specs.lon_inc,
+                                         specs.lat_inc,
+                                         specs.lon_scat,
+                                         specs.lat_scat);
     }
 
-    auto new_model = std::make_shared<scattering::ParticleHabit>(formatted.interpolate_frequency(to_eigen(specs.f_grid)));
+    std::cout << "prepping. " << std::endl;
+
+    auto new_model = std::make_shared<scattering::ParticleHabit>(formatted.interpolate_frequency(specs.f_grid));
     auto result = std::make_shared<ScatteringHabit>(name_, pnd_agenda_, pnd_agenda_input_, new_model);
     return result;
 }

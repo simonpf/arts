@@ -26,23 +26,46 @@
 
   \brief Workspace methods to calculate scattering properties.
 */
+#include <locale>
 #include "arts.h"
 #include "scattering_species.h"
 #include "constants.h"
+
+scattering::LatitudeGridPtr<Numeric> get_quadrature(const String &name,
+                                                    const Vector &grid,
+                                                    Index degree) {
+    if (name == "irregular") {
+        return std::make_shared<scattering::IrregularLatitudeGrid<Numeric>>(to_eigen(grid));
+    } else if (name == "gauss-legendre") {
+        return std::make_shared<scattering::GaussLegendreGrid<Numeric>>(degree);
+    } else if (name == "double-gauss") {
+        return std::make_shared<scattering::DoubleGaussGrid<Numeric>>(degree);
+    } else if (name == "lobatto") {
+        return std::make_shared<scattering::LobattoGrid<Numeric>>(degree);
+    }
+    std::runtime_error("The provided quadrature name is not supported.");
+}
 
 ArrayOfScatteringSpecies calculate_bulk_properties_lab(
     const ArrayOfScatteringSpecies &scattering_species,
     const Vector &f_grid,
     const Index &stokes_dim,
     const Vector &aa_grid,
-    const Vector &za_grid) {
+    const Vector &za_grid,
+    const String &quadrature_type,
+    Index quadrature_degree) {
 
     //
     // Prepare scattering data.
     //
 
+    auto f_grid_ptr = std::make_shared<EigenVector>(to_eigen(f_grid));
+    auto aa_grid_ptr = std::make_shared<EigenVector>(to_eigen(aa_grid));
+    auto za_grid_ptr = get_quadrature(quadrature_type, za_grid, quadrature_degree);
+
     ScatteringPropertiesSpec scattering_specs(
-        f_grid, ReferenceFrame::Lab, stokes_dim, za_grid, aa_grid, za_grid, 1.0);
+        f_grid_ptr, ReferenceFrame::Lab, stokes_dim, za_grid_ptr, aa_grid_ptr,
+        za_grid_ptr, 1.0);
     return scattering_species.prepare_scattering_data(scattering_specs);
 }
 
@@ -121,6 +144,8 @@ void scattering_speciesCalcBulkAbsorptionCoeff(
     const Tensor3 &t_field,
     const Vector &aa_grid,
     const Vector &za_grid,
+    const String &quadrature_type,
+    const Index &quadrature_degree,
     const Verbosity &verbosity) {
   Index n_freq = f_grid.nelem();
   Index n_lon_inc = 1;
@@ -130,7 +155,8 @@ void scattering_speciesCalcBulkAbsorptionCoeff(
   Index n_lon = t_field.ncols();
   Index n_layers = n_lon * n_lat * n_p;
 
-  auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim, aa_grid, za_grid);
+  auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim, aa_grid,
+                                                                za_grid, quadrature_type, quadrature_degree);
   auto bulk_properties = extract_bulk_properties(scattering_species_prepd,
                                                  ws,
                                                  f_grid,
@@ -178,6 +204,8 @@ void scattering_speciesCalcBulkExtinctionCoeff(
     const Tensor3 &t_field,
     const Vector &aa_grid,
     const Vector &za_grid,
+    const String &quadrature_type,
+    const Index &quadrature_degree,
     const Verbosity &verbosity) {
   Index n_freq = f_grid.nelem();
   Index n_lon_inc = 1;
@@ -188,7 +216,8 @@ void scattering_speciesCalcBulkExtinctionCoeff(
   Index n_layers = n_lon * n_lat * n_p;
 
 
-  auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim, aa_grid, za_grid);
+  auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim, aa_grid,
+                                                                za_grid, quadrature_type, quadrature_degree);
   auto bulk_properties = extract_bulk_properties(scattering_species_prepd,
                                                  ws,
                                                  f_grid,
@@ -298,6 +327,8 @@ void scattering_speciesCalcAbsorptionVector(
     const Tensor3 &t_field,
     const Vector &aa_grid,
     const Vector &za_grid,
+    const String &quadrature_type,
+    const Index &quadrature_degree,
     const Verbosity &verbosity) {
   Index n_freq = f_grid.nelem();
   Index n_lon_inc = aa_grid.nelem();
@@ -309,7 +340,7 @@ void scattering_speciesCalcAbsorptionVector(
   Index n_layers = n_lon * n_lat * n_p;
 
   auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim,
-                                                                aa_grid, za_grid);
+                                                                aa_grid, za_grid, quadrature_type, quadrature_degree);
   auto bulk_properties = extract_bulk_properties(scattering_species_prepd,
                                                  ws,
                                                  f_grid,
@@ -360,6 +391,8 @@ void scattering_speciesCalcExtinctionMatrix(
     const Tensor3 &t_field,
     const Vector &aa_grid,
     const Vector &za_grid,
+    const String &quadrature_type,
+    const Index &quadrature_degree,
     const Verbosity &verbosity) {
   Index n_freq = f_grid.nelem();
   Index n_lon_inc = 1;
@@ -371,8 +404,8 @@ void scattering_speciesCalcExtinctionMatrix(
   Index n_lon = t_field.ncols();
   Index n_layers = n_lon * n_lat * n_p;
 
-  auto scattering_species_prepd = calculate_bulk_properties_lab(
-      scattering_species, f_grid, stokes_dim, aa_grid, za_grid);
+  auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim,
+                                                                aa_grid, za_grid, quadrature_type, quadrature_degree);
   auto bulk_properties = extract_bulk_properties(scattering_species_prepd,
                                                  ws,
                                                  f_grid,
@@ -436,6 +469,8 @@ void scattering_speciesCalcScatteringMatrix(
     const Tensor3 &t_field,
     const Vector &aa_grid,
     const Vector &za_grid,
+    const String &quadrature_type,
+    const Index &quadrature_degree,
     const Verbosity &verbosity) {
   Index n_freq = f_grid.nelem();
   Index n_lon_inc = 1;
@@ -451,8 +486,8 @@ void scattering_speciesCalcScatteringMatrix(
   lon_scat *= Conversion::DEG2RAD;
   Vector lat_scat = za_grid;
   lat_scat *= Conversion::DEG2RAD;
-  auto scattering_species_prepd = calculate_bulk_properties_lab(
-      scattering_species, f_grid, stokes_dim, lon_scat, lat_scat);
+  auto scattering_species_prepd = calculate_bulk_properties_lab(scattering_species, f_grid, stokes_dim,
+                                                                aa_grid, za_grid, quadrature_type, quadrature_degree);
   auto bulk_properties = extract_bulk_properties(scattering_species_prepd,
                                                  ws,
                                                  f_grid,

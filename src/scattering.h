@@ -26,6 +26,8 @@
 
   \brief  Defines the abstract interface for scattering species.
 */
+#include <memory>
+
 #include "scattering/single_scattering_data.h"
 
 #include "jacobian.h"
@@ -44,36 +46,64 @@ enum class ReferenceFrame {ScatteringPlane, Lab};
  * data required by different scattering solvers.
  */
 struct ScatteringPropertiesSpec {
-    ScatteringPropertiesSpec(const Vector &f_grid,
+    ScatteringPropertiesSpec(const Vector& f_grid,
                              ReferenceFrame frame_,
                              Index n_stokes_,
                              Index l_max_,
-                             Index m_max=0,
-                             Numeric phase_function_norm=1.0);
-    ScatteringPropertiesSpec(const Vector &f_grid,
+                             Index m_max_=0,
+                             Numeric phase_function_norm_=1.0);
+
+    ScatteringPropertiesSpec(EigenVectorPtr f_grid,
                              ReferenceFrame frame_,
                              Index n_stokes_,
-                             Vector lon_scat_,
-                             Vector lat_scat_,
+                             EigenVectorPtr lon_scat_,
+                             scattering::LatitudeGridPtr<Numeric> lat_scat_,
                              Numeric phase_function_norm=1.0);
-    ScatteringPropertiesSpec(const Vector &f_grid,
+    ScatteringPropertiesSpec(const Vector& f_grid,
                              ReferenceFrame frame_,
                              Index n_stokes_,
-                             Vector lat_inc_,
-                             Vector lon_scat_,
-                             Vector lat_scat_,
-                             Numeric phase_function_norm=1.0);
+                             const Vector& lon_scat_,
+                             const Vector& lat_scat_,
+                             Numeric phase_function_norm_=1.0)
+    : ScatteringPropertiesSpec(std::make_shared<EigenVector>(to_eigen(f_grid)),
+                               frame,
+                               n_stokes_,
+                               std::make_shared<EigenVector>(to_eigen(lon_scat_)),
+                               std::make_shared<scattering::IrregularLatitudeGrid<Numeric>>(to_eigen(lat_scat_)),
+                               phase_function_norm_) {}
+    ScatteringPropertiesSpec(EigenVectorPtr f_grid,
+                             ReferenceFrame frame_,
+                             Index n_stokes_,
+                             EigenVectorPtr lat_inc_,
+                             EigenVectorPtr lon_scat_,
+                             scattering::LatitudeGridPtr<Numeric> lat_scat_,
+                             Numeric phase_function_norm_=1.0);
+    ScatteringPropertiesSpec(const Vector& f_grid_,
+                             ReferenceFrame frame_,
+                             Index n_stokes_,
+                             const Vector& lat_inc_,
+                             const Vector& lon_scat_,
+                             const Vector& lat_scat_,
+                             Numeric phase_function_norm_=1.0)
+    : ScatteringPropertiesSpec(std::make_shared<EigenVector>(to_eigen(f_grid_)),
+                               frame_,
+                               n_stokes_,
+                               std::make_shared<EigenVector>(to_eigen(lat_inc_)),
+                               std::make_shared<EigenVector>(to_eigen(lon_scat_)),
+                               std::make_shared<scattering::IrregularLatitudeGrid<Numeric>>(to_eigen(lat_scat_)),
+                               phase_function_norm_) {}
+
     Format format;
     ReferenceFrame frame;
     Index n_stokes = 0;
     Index l_max = 0;
     Index m_max = 0;
     Numeric phase_function_norm = 1.0;
-    Vector lon_inc{};
-    Vector lat_inc{};
-    Vector lon_scat{};
-    Vector lat_scat{};
-    Vector f_grid{};
+    std::shared_ptr<EigenVector> lon_inc = nullptr;
+    std::shared_ptr<EigenVector> lat_inc = nullptr;
+    std::shared_ptr<EigenVector> lon_scat = nullptr;
+    std::shared_ptr<scattering::LatitudeGrid<double>> lat_scat = nullptr;
+    std::shared_ptr<EigenVector> f_grid = nullptr;
     Index n_angs_frame_conversion = 32;
 };
 

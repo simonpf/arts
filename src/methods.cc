@@ -16760,10 +16760,16 @@ void define_md_data_raw() {
       GOUT_DESC("Rank-6 tensor containing the bulk absorption coefficients."),
       IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
          "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
-      GIN(),
-      GIN_TYPE(),
-      GIN_DEFAULT(),
-      GIN_DESC(),
+      GIN("quadrature_type", "quadrature_degree"),
+      GIN_TYPE("String", "Index"),
+      GIN_DEFAULT("irregular", 0),
+      GIN_DESC(
+          "The type of quadrature to use for the scattering latitude grid:\n"
+          "irregular (uses given *za_grid* w. trapezoidal weights),"
+          " gauss-legendre, double-gauss, lobatto)",
+          "Number of quadrature nodes. Ignored when *quadrature_name* == "
+          " 'irregular'"
+          ),
       SETMETHOD(false),
       AGENDAMETHOD(false),
       USES_TEMPLATES(false),
@@ -16786,10 +16792,16 @@ void define_md_data_raw() {
       GOUT_DESC("Rank-6 tensor containing the bulk extinction coefficients."),
       IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
          "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
-      GIN(),
-      GIN_TYPE(),
-      GIN_DEFAULT(),
-      GIN_DESC(),
+      GIN("quadrature_type", "quadrature_degree"),
+      GIN_TYPE("String", "Index"),
+      GIN_DEFAULT("irregular", "0"),
+      GIN_DESC(
+          "The type of quadrature to use for the scattering latitude grid:\n"
+          "irregular (uses given *za_grid* w. trapezoidal weights),"
+          " gauss-legendre, double-gauss, lobatto)",
+          "Number of quadrature nodes. Ignored when *quadrature_name* == "
+          " 'irregular'"
+          ),
       SETMETHOD(false),
       AGENDAMETHOD(false),
       USES_TEMPLATES(false),
@@ -16838,10 +16850,16 @@ void define_md_data_raw() {
       GOUT_DESC("Rank-7 tensor containing the bulk absorption vector."),
       IN("f_grid", "particle_bulkprop_field", "particle_bulkprop_names",
          "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
-      GIN(),
-      GIN_TYPE(),
-      GIN_DEFAULT(),
-      GIN_DESC(),
+      GIN("quadrature_type", "quadrature_degree"),
+      GIN_TYPE("String", "Index"),
+      GIN_DEFAULT("irregular", "0"),
+      GIN_DESC(
+          "The type of quadrature to use for the scattering latitude grid:\n"
+          "irregular (uses given *za_grid* w. trapezoidal weights),"
+          " gauss-legendre, double-gauss, lobatto)",
+          "Number of quadrature nodes. Ignored when *quadrature_name* == "
+          " 'irregular'"
+          ),
       SETMETHOD(false),
       AGENDAMETHOD(false),
       USES_TEMPLATES(false),
@@ -16869,10 +16887,16 @@ void define_md_data_raw() {
          "t_field",
          "aa_grid",
          "za_grid"),
-      GIN(),
-      GIN_TYPE(),
-      GIN_DEFAULT(),
-      GIN_DESC(),
+      GIN("quadrature_type", "quadrature_degree"),
+      GIN_TYPE("String", "Index"),
+      GIN_DEFAULT("irregular", "0"),
+      GIN_DESC(
+          "The type of quadrature to use for the scattering latitude grid:\n"
+          "irregular (uses given *za_grid* w. trapezoidal weights),"
+          " gauss-legendre, double-gauss, lobatto)",
+          "Number of quadrature nodes. Ignored when *quadrature_name* == "
+          " 'irregular'"
+          ),
       SETMETHOD(false),
       AGENDAMETHOD(false),
       USES_TEMPLATES(false),
@@ -16900,10 +16924,16 @@ void define_md_data_raw() {
          "t_field",
          "aa_grid",
          "za_grid"),
-      GIN(),
-      GIN_TYPE(),
-      GIN_DEFAULT(),
-      GIN_DESC(),
+      GIN("quadrature_type", "quadrature_degree"),
+      GIN_TYPE("String", "Index"),
+      GIN_DEFAULT("irregular", "0"),
+      GIN_DESC(
+          "The type of quadrature to use for the scattering latitude grid:\n"
+          "irregular (uses given *za_grid* w. trapezoidal weights),"
+          " gauss-legendre, double-gauss, lobatto)",
+          "Number of quadrature nodes. Ignored when *quadrature_name* == "
+          " 'irregular'"
+          ),
       SETMETHOD(false),
       AGENDAMETHOD(false),
       USES_TEMPLATES(false),

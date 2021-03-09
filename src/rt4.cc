@@ -655,27 +655,37 @@ void run_rt4(Workspace& ws,
   // Loop over frequencies
   for (Index f_index = 0; f_index < f_grid.nelem(); f_index++) {
 
-      Vector aa_grid(1, 0.0);
+      auto aa_grid = std::make_shared<EigenVector>(1);
+      (*aa_grid)[0] = M_PI;
       //nlinspace(aa_grid, 0, 2.0 * M_PI, 2 * pfct_aa_grid_size - 1);
-      Vector f_grid_1(1, f_grid[f_index]);
-      Vector lat_scat = za_grid;
-      std::sort(lat_scat.get_c_array(), lat_scat.get_c_array() + lat_scat.nelem());
+      auto f_grid_1 = std::make_shared<EigenVector>(1);
+      (*f_grid_1)[0] = f_grid[f_index];
+      Vector lat_scat_arts = za_grid;
+      std::sort(lat_scat_arts.get_c_array(), lat_scat_arts.get_c_array() + lat_scat_arts.nelem());
+      auto lat_scat = std::make_shared<scattering::LobattoGrid<Numeric>>(lat_scat_arts.nelem());
+      std::cout << "lat scat ARTS: " << lat_scat_arts.nelem() << std::endl;
+      std::cout << lat_scat_arts << std::endl;
+      std::cout << "lat scat ARTS: " << lat_scat->size() << std::endl;
+      std::cout << RAD2DEG * (*lat_scat) << std::endl;
+      std::cout << "quad type: " << quad_type << std::endl;
+
+
       xml_write_to_file("za_grid.xml",
-                        lat_scat,
+                        to_arts(*lat_scat),
                         FileType::FILE_TYPE_BINARY,
                         0,
                         verbosity);
-      lat_scat *= DEG2RAD;
       Vector lon_scat;
       ScatteringPropertiesSpec scattering_specs(f_grid_1,
                                                 ReferenceFrame::Lab,
                                                 stokes_dim,
-                                                lat_scat,
+                                                std::make_shared<EigenVector>(*lat_scat),
                                                 aa_grid,
                                                 lat_scat,
                                                 1.0);
 
       auto scattering_species_prepd = scattering_species.prepare_scattering_data(scattering_specs);
+      std::cout << "check" << std::endl;
       auto bulk_properties = scattering_species_prepd.calculate_bulk_properties(ws,
                                                                                 pbf,
                                                                                 pbf_names,
@@ -772,10 +782,6 @@ void run_rt4(Workspace& ws,
                           FileType::FILE_TYPE_BINARY,
                           0,
                           verbosity);
-        std::cout << "SCATTERING :: " << std::endl;
-        std::cout << scattering_matrix << std::endl;
-        std::cout << "SCATTERING REF :: " << std::endl;
-        std::cout << scatter_matrix  << std::endl;
       } else {
         pfct_failed = 1;
       }

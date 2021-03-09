@@ -56,9 +56,9 @@ ws.ReadXML(ws.particle_bulkprop_names, "test_data/particle_bulkprop_names")
 
 ws.ReadXML(ws.scat_data_raw, "test_data/scat_data_single_t.xml")
 
-ws.scat_data_raw = ws.scat_data_raw.value[:1]
+ws.scat_data_raw = ws.scat_data_raw.value
 ws.ReadXML(ws.scat_meta, "test_data/scat_meta.xml")
-ws.scat_meta = ws.scat_meta.value[:1]
+ws.scat_meta = ws.scat_meta.value
 
 ws.StringCreate("species_id_string")
 
@@ -91,34 +91,34 @@ ws.scattering_speciesAddScatteringHabit(name="rain",
                                         psd_agenda=psd_agenda,
                                         pnd_agenda_input=["RWC"])
 
-# #Scat species 1
-#ws.StringSet(ws.species_id_string, "IWC")
-#ws.ArrayOfStringSet(ws.pnd_agenda_input_names, ['IWC'])
-#@arts_agenda
-#def pnd_agenda_array(ws):
-#   ws.ScatSpeciesSizeMassInfo(species_index=ws.agenda_array_index, x_unit="dveq", x_fit_start=0.0001)
-#   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
-#   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
-#   ws.psdMcFarquaharHeymsfield97(t_min=10.0, t_max=273.0, t_min_psd=210.0)
-#   ws.pndFromPsdBasic()
-#
-#ws.Append(ws.pnd_agenda_array, pnd_agenda_array)
-#ws.Append(ws.scat_species, ws.species_id_string)
-#ws.Append(ws.pnd_agenda_array_input_names, ws.pnd_agenda_input_names)
-#
-#@arts_agenda
-#def psd_agenda(ws):
-#   ws.scattering_habitGetParticleSizes(x_unit="dveq")
-#   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
-#   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
-#   ws.psdMcFarquaharHeymsfield97(t_min=10.0, t_max=273.0, t_min_psd=210.0)
-#   ws.pndFromPsdBasic()
-#
-#ws.scattering_speciesAddScatteringHabit(name="ice",
-#                                      scattering_data=ws.scat_data_raw.value[1],
-#                                      scattering_meta_data=ws.scat_meta.value[1],
-#                                      psd_agenda=psd_agenda,
-#                                      pnd_agenda_input=["IWC"])
+ #Scat species 1
+ws.StringSet(ws.species_id_string, "IWC")
+ws.ArrayOfStringSet(ws.pnd_agenda_input_names, ['IWC'])
+@arts_agenda
+def pnd_agenda_array(ws):
+   ws.ScatSpeciesSizeMassInfo(species_index=ws.agenda_array_index, x_unit="dveq", x_fit_start=0.0001)
+   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
+   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
+   ws.psdMcFarquaharHeymsfield97(t_min=10.0, t_max=273.0, t_min_psd=210.0)
+   ws.pndFromPsdBasic()
+
+ws.Append(ws.pnd_agenda_array, pnd_agenda_array)
+ws.Append(ws.scat_species, ws.species_id_string)
+ws.Append(ws.pnd_agenda_array_input_names, ws.pnd_agenda_input_names)
+
+@arts_agenda
+def psd_agenda(ws):
+   ws.scattering_habitGetParticleSizes(x_unit="dveq")
+   ws.Copy(ws.psd_size_grid, ws.scat_species_x)
+   ws.Copy(ws.pnd_size_grid, ws.scat_species_x)
+   ws.psdMcFarquaharHeymsfield97(t_min=10.0, t_max=273.0, t_min_psd=210.0)
+   ws.pndFromPsdBasic()
+
+ws.scattering_speciesAddScatteringHabit(name="ice",
+                                      scattering_data=ws.scat_data_raw.value[1],
+                                      scattering_meta_data=ws.scat_meta.value[1],
+                                      psd_agenda=psd_agenda,
+                                      pnd_agenda_input=["IWC"])
 
 # RT4 creates own grirs, so we need copies of the ones created above
 ws.VectorCreate("za_grid_copy")
@@ -151,7 +151,7 @@ ws.lbl_checkedCalc()
 ws.propmat_clearsky_agenda_checkedCalc()
 ws.atmfields_checkedCalc(bad_partition_functions_ok=1)
 # Intitial settings for tests
-ws.IndexSet(ws.stokes_dim, 1)
+ws.IndexSet(ws.stokes_dim, 2)
 # Scattering data tailored to these frequencies, so don't change!
 ws.VectorSet(ws.f_grid, np.array([3.15e+10, 1.65e+11, 6.66e+11]))
 ws.VectorSet(ws.f_grid, np.array([6.66e+11]))

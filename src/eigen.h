@@ -28,6 +28,8 @@
 #ifndef __ARTS_EIGEN_H__
 #define __ARTS_EIGEN_H__
 
+#include <memory>
+
 #include <Eigen/Core>
 #include "Eigen/CXX11/Tensor"
 #include "matpackV.h"
@@ -38,6 +40,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 using EigenVector = Eigen::Matrix<Numeric, 1, -1, Eigen::RowMajor>;
+using EigenVectorPtr = std::shared_ptr<EigenVector>;
 using EigenVectorMap = Eigen::Map<EigenVector>;
 using EigenConstVectorMap = Eigen::Map<const EigenVector>;
 

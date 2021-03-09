@@ -26,8 +26,9 @@
 
   \brief  Implementation of scattering.h
 */
-#include "scattering.h"
+#include <memory>
 
+#include "scattering.h"
 #include "scattering/eigen.h"
 
 using scattering::eigen::tensor_index;
@@ -36,7 +37,7 @@ using scattering::eigen::tensor_index;
 // ScatteringPropertiesSpec
 ////////////////////////////////////////////////////////////////////////////////
 
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_,
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector& f_grid_,
                                                    ReferenceFrame frame_,
                                                    Index stokes_dim,
                                                    Index l_max_,
@@ -47,43 +48,44 @@ ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_,
       l_max(l_max_),
       m_max(m_max_),
       phase_function_norm(phase_function_norm_),
-      f_grid(f_grid_) {}
+      f_grid(std::make_shared<EigenVector>(to_eigen(f_grid_))) {}
 
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_,
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(EigenVectorPtr f_grid_,
                                                    ReferenceFrame frame_,
                                                    Index stokes_dim,
-                                                   Vector lon_scat_,
-                                                   Vector lat_scat_,
+                                                   EigenVectorPtr lon_scat_,
+                                                   scattering::LatitudeGridPtr<Numeric> lat_scat_,
                                                    Numeric phase_function_norm_)
     : format(Format::Gridded),
       n_stokes(stokes_dim),
       phase_function_norm(phase_function_norm_),
-      lon_inc(1),
-      lat_inc(1),
+      lon_inc(std::make_shared<EigenVector>(1, 1)),
+      lat_inc(std::make_shared<EigenVector>(1, 1)),
       lon_scat(lon_scat_),
       lat_scat(lat_scat_),
       f_grid(f_grid_) {
-  lon_inc[0] = M_PI;
-  lat_inc[0] = 0.5 * M_PI;
+  (*lon_inc)[0] = M_PI;
+  (*lat_inc)[0] = 0.5 * M_PI;
 }
 
-ScatteringPropertiesSpec::ScatteringPropertiesSpec(const Vector &f_grid_,
+ScatteringPropertiesSpec::ScatteringPropertiesSpec(EigenVectorPtr f_grid_,
                                                    ReferenceFrame frame_,
                                                    Index stokes_dim,
-                                                   Vector lat_inc_,
-                                                   Vector lon_scat_,
-                                                   Vector lat_scat_,
+                                                   EigenVectorPtr lat_inc_,
+                                                   EigenVectorPtr lon_scat_,
+                                                   scattering::LatitudeGridPtr<Numeric> lat_scat_,
                                                    Numeric phase_function_norm_)
     : format(Format::Gridded),
       frame(frame_),
       n_stokes(stokes_dim),
       phase_function_norm(phase_function_norm_),
-      lon_inc(1),
+      lon_inc(std::make_shared<EigenVector>(1, 1)),
       lat_inc(lat_inc_),
       lon_scat(lon_scat_),
       lat_scat(lat_scat_),
       f_grid(f_grid_) {
-  lon_inc[0] = M_PI;
+    (*lon_inc)[0] = M_PI;
+    std::cout << f_grid << " / " << lon_inc << " / " << lat_inc << " / " << lon_scat << " / " << lat_scat << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
