@@ -767,21 +767,26 @@ void run_rt4(Workspace& ws,
                         auto_inc_nstreams,
                         verbosity);
 
-        xml_write_to_file("extinction_matrices_stokes_2.xml",
-                          extinct_matrix,
+
+        //xml_write_to_file("extinction_matrices_stokes_1.xml",
+        //                  extinct_matrix,
+        //                  FileType::FILE_TYPE_BINARY,
+        //                  0,
+        //                  verbosity);
+        //xml_write_to_file("absorption_vector_stokes_1.xml",
+        //                  absorption_vector,
+        //                  FileType::FILE_TYPE_BINARY,
+        //                  0,
+        //                  verbosity);
+        std::cout << "SCATTERING MATRIX " << std::endl;
+        std::cout << scattering_matrix << std::endl;
+        xml_write_to_file("scattering_matrix_stokes_1.xml",
+                          scattering_matrix,
                           FileType::FILE_TYPE_BINARY,
                           0,
                           verbosity);
-        xml_write_to_file("absorption_vector_stokes_2.xml",
-                          absorption_vector,
-                          FileType::FILE_TYPE_BINARY,
-                          0,
-                          verbosity);
-        xml_write_to_file("scattering_matrices_stokes_2.xml",
-                          scatter_matrix,
-                          FileType::FILE_TYPE_BINARY,
-                          0,
-                          verbosity);
+        std::cout << "SCATTERING MATRIX REF" << std::endl;
+        std::cout << scattering_matrix << std::endl;
       } else {
         pfct_failed = 1;
       }

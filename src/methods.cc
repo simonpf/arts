@@ -16762,7 +16762,7 @@ void define_md_data_raw() {
          "scattering_species", "stokes_dim", "t_field", "aa_grid", "za_grid"),
       GIN("quadrature_type", "quadrature_degree"),
       GIN_TYPE("String", "Index"),
-      GIN_DEFAULT("irregular", 0),
+      GIN_DEFAULT("irregular", "0"),
       GIN_DESC(
           "The type of quadrature to use for the scattering latitude grid:\n"
           "irregular (uses given *za_grid* w. trapezoidal weights),"

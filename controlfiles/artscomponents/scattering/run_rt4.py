@@ -91,7 +91,7 @@ ws.scattering_speciesAddScatteringHabit(name="rain",
                                         psd_agenda=psd_agenda,
                                         pnd_agenda_input=["RWC"])
 
- #Scat species 1
+#Scat species 1
 ws.StringSet(ws.species_id_string, "IWC")
 ws.ArrayOfStringSet(ws.pnd_agenda_input_names, ['IWC'])
 @arts_agenda
@@ -151,7 +151,7 @@ ws.lbl_checkedCalc()
 ws.propmat_clearsky_agenda_checkedCalc()
 ws.atmfields_checkedCalc(bad_partition_functions_ok=1)
 # Intitial settings for tests
-ws.IndexSet(ws.stokes_dim, 2)
+ws.IndexSet(ws.stokes_dim, 1)
 # Scattering data tailored to these frequencies, so don't change!
 ws.VectorSet(ws.f_grid, np.array([3.15e+10, 1.65e+11, 6.66e+11]))
 ws.VectorSet(ws.f_grid, np.array([6.66e+11]))
